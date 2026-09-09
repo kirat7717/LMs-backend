@@ -1,0 +1,157 @@
+{
+  "info": {
+    "_postman_id": "admin-lms-collection",
+    "name": "LMS - Admin APIs",
+    "description": "Shared Admin and Super Admin management APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Update Admin Profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"LMS Admin\",\n  \"bio\": \"Platform administrator\",\n  \"avatar\": \"http://localhost:9000/images/admin.png\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "profile"]
+        }
+      }
+    },
+    {
+      "name": "Approve / Reject Teacher Request",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"approved\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/teacher-requests/{{teacherRequestId}}",
+          "host": ["{{baseUrl}}"],
+          "path": [
+            "api",
+            "admin",
+            "teacher-requests",
+            "{{teacherRequestId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Reject Teacher Request",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"rejected\",\n  \"rejectionReason\": \"Insufficient teaching experience\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/teacher-requests/{{teacherRequestId}}",
+          "host": ["{{baseUrl}}"],
+          "path": [
+            "api",
+            "admin",
+            "teacher-requests",
+            "{{teacherRequestId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Block / Unblock Teacher",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"isBlocked\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/teachers/{{teacherId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": [
+            "api",
+            "admin",
+            "teachers",
+            "{{teacherId}}",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Block / Unblock Student",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"isBlocked\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/students/{{studentId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": [
+            "api",
+            "admin",
+            "students",
+            "{{studentId}}",
+            "status"
+          ]
+        }
+      }
+    }
+  ]
+}
