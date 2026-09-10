@@ -35,18 +35,21 @@ const studentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Student account verification
+isVerified: {
+  type: Boolean,
+  default: false,
+},
 
-    // ==================== EMAIL VERIFICATION ====================
+verificationToken: {
+  type: String,
+  default: null,
+},
 
-    emailVerificationToken: {
-      type: String,
-      default: null,
-    },
-
-    emailVerificationExpires: {
-      type: Date,
-      default: null,
-    },
+verificationExpires: {
+  type: Date,
+  default: null,
+},
 
     // ==================== PASSWORD RESET ====================
 

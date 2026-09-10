@@ -1,5 +1,5 @@
 import { sendMail } from "./email.service.js";
-
+import 'dotenv/config'
 const emailTemplate = ({
   title,
   greeting,
@@ -175,30 +175,35 @@ export const sendStudentRegistrationEmail = async (student) => {
     html: emailTemplate({
       title: "Welcome to LMS Platform!",
       greeting: `Hi <strong>${student.name}</strong>,`,
-      content: `
-        <p style="color:#374151; line-height:1.6;">
-          Your student account has been created successfully.
-        </p>
+     content: `
+  <p style="color:#374151; line-height:1.6;">
+    Your student account has been created successfully.
+  </p>
 
-        <p style="color:#374151; line-height:1.6;">
-          Please verify your email address to activate your account.
-        </p>
-      `,
+  <p style="color:#374151; line-height:1.6;">
+    A verification link has been sent to your email address.
+    Please use that link to verify and activate your student account.
+  </p>
+`,
     }),
   });
 };
 
 // ==================== EMAIL VERIFICATION ====================
 
+// ==================== STUDENT ACCOUNT VERIFICATION EMAIL ====================
+
+// ==================== STUDENT ACCOUNT VERIFICATION EMAIL ====================
+
 export const sendStudentVerificationEmail = async (student, token) => {
   const verificationUrl =
-    `${process.env.CLIENT_URL}/api/students/verify-email?token=${token}`;
+    `${process.env.BASE_URL}/api/students/verify-account?token=${token}`;
 
   return await sendMail({
     to: student.email,
-    subject: "Verify Your LMS Email ✉️",
+    subject: "Verify Your LMS Student Account ✉️",
     html: emailTemplate({
-      title: "Verify Your Email",
+      title: "Verify Your Student Account",
       greeting: `Hi <strong>${student.name}</strong>,`,
       content: `
         <p style="color:#374151; line-height:1.6;">
@@ -206,17 +211,16 @@ export const sendStudentVerificationEmail = async (student, token) => {
         </p>
 
         <p style="color:#374151; line-height:1.6;">
-          Please verify your email address to activate your account.
+          Click the button below to verify and activate your student account.
         </p>
       `,
-      buttonText: "Verify My Email",
+      buttonText: "Verify My Account",
       buttonUrl: verificationUrl,
       warning:
-        "This verification link will expire in 15 minutes. If you did not create this account, you can safely ignore this email.",
+        "This verification link will expire in 30 minutes. If you did not create this account, you can safely ignore this email.",
     }),
   });
 };
-
 // ==================== PASSWORD CHANGED EMAIL ====================
 
 export const sendStudentPasswordChangedEmail = async (student) => {
@@ -245,7 +249,7 @@ export const sendStudentPasswordChangedEmail = async (student) => {
 
 export const sendStudentPasswordResetEmail = async (student, token) => {
   const resetUrl =
-    `${process.env.CLIENT_URL}/api/students/reset-password?token=${token}`;
+    `${process.env.BASE_URL}/api/students/reset-password?token=${token}`;
 
   return await sendMail({
     to: student.email,

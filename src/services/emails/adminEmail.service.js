@@ -56,7 +56,7 @@ const emailTemplate = ({ title, message, buttonText, buttonUrl }) => {
 
 const sendAdminInvitationEmail = async (admin, setupToken) => {
   // Create password setup URL
-  const setupUrl = `${process.env.CLIENT_URL}/admin/set-password?token=${setupToken}`;
+  const setupUrl = `${process.env.BASE_URL}/admin/set-password?token=${setupToken}`;
 
   // Prepare invitation email
   const html = emailTemplate({
@@ -83,7 +83,7 @@ const sendAdminInvitationEmail = async (admin, setupToken) => {
 
 const sendAdminPasswordResetEmail = async (admin, resetToken) => {
   // Create password reset URL
-  const resetUrl = `${process.env.CLIENT_URL}/admin/reset-password?token=${resetToken}`;
+  const resetUrl = `${process.env.BASE_URL}/admin/reset-password?token=${resetToken}`;
 
   // Prepare reset email
   const html = emailTemplate({

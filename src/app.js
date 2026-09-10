@@ -1,34 +1,124 @@
 import express from "express";
+import morgan from "morgan";
 import cors from "cors";
-import path from "path";
 import swaggerUi from "swagger-ui-express";
+
 import swaggerSpec from "./config/swagger.js";
 
 import studentRoutes from "./routes/student.routes.js";
 import teacherRoutes from "./routes/teacher.routes.js";
+
 import uploadRoutes from "./routes/upload.routes.js";
+
 import adminRoutes from "./routes/admin.routes.js";
-import adminsRoutes from "./routes/admins.routes.js";
+import adminManagementRoutes from "./routes/adminManagement.routes.js";
+
+import superAdminRoutes from "./routes/superAdmin.routes.js";
+
+import courseRoutes from "./routes/course.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
+import { handleStripeWebhook } from "./controllers/payment.controller.js";
+
+
 const app = express();
 
+
+// ==================== GLOBAL MIDDLEWARE ====================
+
 app.use(cors());
+// ==================== STRIPE WEBHOOK ====================
+
+app.post(
+  "/api/students/payments/webhook",
+  express.raw({ type: "application/json" }),
+  handleStripeWebhook
+);
+
+
 app.use(express.json());
+
+app.use(morgan("dev"));
+
+
+// ==================== STATIC FILES ====================
 
 // Serve uploaded images
 app.use(
   "/images",
-  express.static(path.join(process.cwd(), "public", "images"))
+  express.static("public/images")
 );
-// Swagger
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use("/api/students", studentRoutes);
-app.use("/api/teachers", teacherRoutes);
-// Upload APIs
-app.use("/api/upload", uploadRoutes);
-// Shared Admin APIs
-app.use("/api/admin", adminRoutes);
 
-// Admin account APIs
-app.use("/api/admins", adminsRoutes);
+// Serve uploaded videos
+app.use(
+  "/videos",
+  express.static("public/videos")
+);
+
+
+// ==================== SWAGGER ====================
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
+
+// ==================== STUDENT ROUTES ====================
+
+app.use(
+  "/api/students",
+  studentRoutes
+);
+
+
+// ==================== TEACHER ROUTES ====================
+
+app.use(
+  "/api/teachers",
+  teacherRoutes
+);
+
+
+// ==================== UPLOAD ROUTES ====================
+
+app.use(
+  "/api/upload",
+  uploadRoutes
+);
+
+
+// ==================== ADMIN ROUTES ====================
+
+// Admin authentication & profile
+app.use(
+  "/api/admin",
+  adminRoutes
+);
+
+// Admin management
+app.use(
+  "/api/admin",
+  adminManagementRoutes
+);
+
+
+// ==================== SUPER ADMIN ROUTES ====================
+
+app.use(
+  "/api/super-admin",
+  superAdminRoutes
+);
+
+
+// ==================== COURSE ROUTES ====================
+
+// Public courses + course management
+app.use(
+  "/api/courses",
+  courseRoutes
+);
+
+app.use("/api/students/payments", paymentRoutes);
 
 export default app;

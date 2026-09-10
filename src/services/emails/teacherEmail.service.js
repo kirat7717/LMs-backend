@@ -104,7 +104,7 @@ export const sendTeacherPasswordResetEmail = async (
   teacher,
   resetToken
 ) => {
-  const resetLink = `${process.env.CLIENT_URL}/teacher/reset-password?token=${resetToken}`;
+  const resetLink = `${process.env.BASE_URL}/teacher/reset-password?token=${resetToken}`;
 
   return await sendMail({
     to: teacher.email,

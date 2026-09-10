@@ -9,51 +9,31 @@ import {
   updateSection,
   deleteSection,
   deleteLecture,
-  getTeacherCourses,
-  getTeacherCourseDetail,
   uploadLectureVideo,
 } from "../controllers/course.controller.js";
 
 import authMiddleware from "../middlewares/auth.middleware.js";
 import teacherMiddleware from "../middlewares/teacher.middleware.js";
-
 import uploadVideo from "../middlewares/uploadVideo.middleware.js";
 
 const router = express.Router();
 
-
-// ==================== PUBLIC COURSE ROUTES ====================
+/* =========================
+   PUBLIC COURSE APIs
+========================= */
 
 // Get all approved courses
-router.get(
-  "/",
-  getCourses
-);
+router.get("/", getCourses);
+
+// Get single approved course detail
+router.get("/:id", getCourseDetail);
 
 
-// ==================== TEACHER COURSE VIEW ROUTES ====================
+/* =========================
+   TEACHER COURSE APIs
+========================= */
 
-// Get all courses created by logged-in teacher
-// Keep this BEFORE /:id
-router.get(
-  "/courses",
-  authMiddleware,
-  teacherMiddleware,
-  getTeacherCourses
-);
-
-// Get single course created by logged-in teacher
-router.get(
-  "/courses/:id",
-  authMiddleware,
-  teacherMiddleware,
-  getTeacherCourseDetail
-);
-
-
-// ==================== TEACHER COURSE MANAGEMENT ====================
-
-// Create course
+// Create new course
 router.post(
   "/",
   authMiddleware,
@@ -61,7 +41,7 @@ router.post(
   createCourse
 );
 
-// Update course basic information
+// Update own course
 router.patch(
   "/:id",
   authMiddleware,
@@ -69,10 +49,7 @@ router.patch(
   updateCourse
 );
 
-
-// ==================== SECTION & LECTURE ROUTES ====================
-
-// Add section + optional lecture
+// Add section
 router.post(
   "/:courseId/sections",
   authMiddleware,
@@ -80,7 +57,7 @@ router.post(
   addSection
 );
 
-// Update section / add lecture / update lecture
+// Update section / lecture
 router.patch(
   "/:courseId/sections/:sectionId",
   authMiddleware,
@@ -88,7 +65,7 @@ router.patch(
   updateSection
 );
 
-// Delete complete section + all lectures
+// Delete section
 router.delete(
   "/:courseId/sections/:sectionId",
   authMiddleware,
@@ -104,9 +81,6 @@ router.delete(
   deleteLecture
 );
 
-
-// ==================== LECTURE VIDEO ====================
-
 // Upload lecture video
 router.post(
   "/:courseId/sections/:sectionId/lectures/:lectureId/video",
@@ -115,16 +89,5 @@ router.post(
   uploadVideo.single("video"),
   uploadLectureVideo
 );
-
-
-// ==================== PUBLIC COURSE DETAIL ====================
-
-// Get single approved course
-// Keep this AFTER /courses routes
-router.get(
-  "/:id",
-  getCourseDetail
-);
-
 
 export default router;

@@ -144,6 +144,33 @@ const updateUserBlockStatusSchema = Joi.object({
     "any.required": "isBlocked is required",
   }),
 });
+
+// Get teacher requests filter
+const getTeacherRequestsSchema = Joi.object({
+  status: Joi.string()
+    .valid("pending", "approved", "rejected")
+    .optional()
+    .messages({
+      "any.only": "Status must be pending, approved or rejected",
+    }),
+});
+
+// Get teachers with optional active and blocked filters
+const getTeachersSchema = Joi.object({
+  isActive: Joi.boolean().optional().messages({
+    "boolean.base": "isActive must be true or false",
+  }),
+
+  isBlocked: Joi.boolean().optional().messages({
+    "boolean.base": "isBlocked must be true or false",
+  }),
+});
+// Get students with optional blocked filter
+const getStudentsSchema = Joi.object({
+  isBlocked: Joi.boolean().optional().messages({
+    "boolean.base": "isBlocked must be true or false",
+  }),
+});
 // ==================== EXPORT VALIDATION SCHEMAS ====================
 
 export {
@@ -154,5 +181,8 @@ export {
   adminResetPasswordSchema,
   adminUpdateProfileSchema,
   updateTeacherRequestSchema,
-  updateUserBlockStatusSchema
+  updateUserBlockStatusSchema,
+  getTeacherRequestsSchema,
+  getTeachersSchema,
+  getStudentsSchema
 };

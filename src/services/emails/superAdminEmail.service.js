@@ -59,7 +59,7 @@ const sendSuperAdminPasswordResetEmail = async (
   resetToken
 ) => {
   // Create password reset URL
-  const resetUrl = `${process.env.CLIENT_URL}/super-admin/reset-password?token=${resetToken}`;
+  const resetUrl = `${process.env.BASE_URL}/super-admin/reset-password?token=${resetToken}`;
 
   // Prepare reset email
   const html = emailTemplate({

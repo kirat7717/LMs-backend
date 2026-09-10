@@ -90,3 +90,60 @@ export const studentLoginSchema = Joi.object({
     "any.required": "Password is required",
   }),
 });
+
+
+// ==================== STUDENT COURSE QUERY VALIDATION ====================
+
+export const studentCourseQuerySchema = Joi.object({
+  // Search course by title
+  search: Joi.string().trim().max(100).optional(),
+
+  // Search category by category name
+  category: Joi.string().trim().max(100).lowercase().optional(),
+
+  // Pagination
+  page: Joi.number().integer().min(1).default(1),
+
+  limit: Joi.number().integer().min(1).max(50).default(10),
+});
+
+
+// ==================== UPDATE COURSE PROGRESS ====================
+
+export const updateCourseProgressSchema = Joi.object({
+  // Embedded lecture ID
+  lectureId: Joi.string()
+    .hex()
+    .length(24)
+    .required()
+    .messages({
+      "string.empty": "Lecture ID is required",
+      "string.hex": "Invalid lecture ID",
+      "string.length": "Invalid lecture ID",
+      "any.required": "Lecture ID is required",
+    }),
+
+  // How much of the video has been watched
+  watchedDuration: Joi.number()
+    .min(0)
+    .required()
+    .messages({
+      "number.base": "Watched duration must be a number",
+      "number.min": "Watched duration cannot be negative",
+      "any.required": "Watched duration is required",
+    }),
+
+  // Current video position
+  lastPosition: Joi.number()
+    .min(0)
+    .required()
+    .messages({
+      "number.base": "Last position must be a number",
+      "number.min": "Last position cannot be negative",
+      "any.required": "Last position is required",
+    }),
+
+  // Student marks lecture as completed
+  isCompleted: Joi.boolean()
+    .default(false),
+});

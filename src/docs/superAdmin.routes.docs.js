@@ -142,3 +142,25 @@
  *       500:
  *         description: Server error
  */
+/**
+ * @swagger
+ * /api/super-admin/profile:
+ *   get:
+ *     tags:
+ *       - Super Admins
+ *     summary: Get Super Admin profile
+ *     description: Returns the profile of the currently authenticated Super Admin.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Super Admin profile fetched successfully
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Access denied, Super Admin access required, or account is blocked
+ *       404:
+ *         description: Super Admin account not found
+ *       500:
+ *         description: Internal server error
+ */

@@ -1,8 +1,8 @@
 /**
  * @swagger
  * tags:
- *   name: Students
- *   description: Student authentication and profile APIs
+ *   - name: Students
+ *     description: Student authentication and profile APIs
  */
 
 /**
@@ -43,7 +43,7 @@
  *                 example: http://localhost:9000/images/avatar.png
  *     responses:
  *       201:
- *         description: Student registered successfully
+ *         description: Student registered successfully. Account verification link sent.
  *       400:
  *         description: Validation error
  *       409:
@@ -54,9 +54,9 @@
 
 /**
  * @swagger
- * /api/students/verify-email:
+ * /api/students/verify-account:
  *   get:
- *     summary: Verify student email
+ *     summary: Verify student account
  *     tags: [Students]
  *     parameters:
  *       - in: query
@@ -64,15 +64,13 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Email verification token
+ *         description: Temporary student account verification token
  *         example: verification-token-here
  *     responses:
  *       200:
- *         description: Email verified successfully
+ *         description: Student account verified successfully
  *       400:
- *         description: Invalid or expired verification token
- *       404:
- *         description: Student not found
+ *         description: Verification token is missing, invalid, or expired
  *       500:
  *         description: Server error
  */
@@ -81,7 +79,7 @@
  * @swagger
  * /api/students/resend-verification:
  *   post:
- *     summary: Resend student email verification
+ *     summary: Resend student account verification email
  *     tags: [Students]
  *     requestBody:
  *       required: true
@@ -97,9 +95,9 @@
  *                 example: rahul@example.com
  *     responses:
  *       200:
- *         description: Verification email sent successfully
+ *         description: Account verification email sent successfully
  *       400:
- *         description: Validation error
+ *         description: Validation error or student account is already verified
  *       404:
  *         description: Student not found
  *       500:
@@ -136,7 +134,7 @@
  *       401:
  *         description: Invalid credentials
  *       403:
- *         description: Account blocked or email not verified
+ *         description: Student account is not verified or is blocked
  *       500:
  *         description: Server error
  */
@@ -242,4 +240,26 @@
  *         description: Student not found
  *       500:
  *         description: Server error
+ */
+/**
+ * @swagger
+ * /api/students/profile:
+ *   get:
+ *     tags:
+ *       - Students
+ *     summary: Get student profile
+ *     description: Returns the profile of the currently authenticated student.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Student profile fetched successfully
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Access denied, student access required, or account is blocked
+ *       404:
+ *         description: Student account not found
+ *       500:
+ *         description: Internal server error
  */

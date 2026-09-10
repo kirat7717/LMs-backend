@@ -1,3 +1,8 @@
+import 'dotenv/config'
+
+
+
+
 // ==================== UPLOAD IMAGE ====================
 
 const uploadImage = async (req, res) => {
@@ -10,8 +15,9 @@ const uploadImage = async (req, res) => {
       });
     }
 
-    // Generate public URL for uploaded image
-    const imageUrl = `${req.protocol}://${req.get("host")}/images/${req.file.filename}`;
+   // Generate public URL for uploaded image
+const imageUrl =
+  `${process.env.BASE_URL}/images/${req.file.filename}`;
 
     return res.status(201).json({
       success: true,
@@ -31,4 +37,7 @@ const uploadImage = async (req, res) => {
   }
 };
 
-export { uploadImage };
+// ==================== UPLOAD LECTURE VIDEO ====================
+
+
+export { uploadImage, };

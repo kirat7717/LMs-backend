@@ -1,31 +1,50 @@
 import express from "express";
 
 import {
-  updateTeacherRequest,
+  setAdminPassword,
+  loginAdmin,
+  getAdminProfile,
+  updateAdminProfile,
 } from "../controllers/admin.controller.js";
 
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
-import superAdminMiddleware from "../middlewares/superAdmin.middleware.js";
-import { createAdmin } from "../controllers/superAdmin.controller.js";
 
 const router = express.Router();
 
-// ==================== TEACHER REQUEST ====================
 
-// Admin + Super Admin can approve or reject teacher requests
-router.patch(
-  "/teacher-requests/:id",
-  authMiddleware,
-  adminMiddleware,
-  updateTeacherRequest
+// ==================== PUBLIC ADMIN APIs ====================
+
+// Set Admin password using setup token
+router.post(
+  "/set-password",
+  setAdminPassword
 );
 
-// Super Admin only
+// Admin login
 router.post(
-  "/",
+  "/login",
+  loginAdmin
+);
+
+
+// ==================== PROTECTED ADMIN APIs ====================
+
+// Get Admin profile
+router.get(
+  "/profile",
   authMiddleware,
-  superAdminMiddleware,
-  createAdmin
-)
+  adminMiddleware,
+  getAdminProfile
+);
+
+// Update Admin profile
+router.patch(
+  "/profile",
+  authMiddleware,
+  adminMiddleware,
+  updateAdminProfile
+);
+
+
 export default router;

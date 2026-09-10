@@ -176,3 +176,72 @@
  *       500:
  *         description: Server error
  */
+/**
+ * @swagger
+ * /api/admin/courses/{id}:
+ *   patch:
+ *     summary: Approve or reject a pending course
+ *     tags: [Admins]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Course ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum:
+ *                   - approved
+ *                   - rejected
+ *                 example: approved
+ *               rejectionReason:
+ *                 type: string
+ *                 example: Course content needs improvement
+ *     responses:
+ *       200:
+ *         description: Course approval status updated successfully
+ *       400:
+ *         description: Validation error or course is not pending
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Access denied
+ *       404:
+ *         description: Course not found
+ *       500:
+ *         description: Server error
+ */
+/**
+ * @swagger
+ * /api/admin/profile:
+ *   get:
+ *     tags:
+ *       - Admins
+ *     summary: Get admin profile
+ *     description: Returns the profile of the currently authenticated admin.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Admin profile fetched successfully
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Access denied, admin access required, or account is blocked
+ *       404:
+ *         description: Admin account not found
+ *       500:
+ *         description: Internal server error
+ */

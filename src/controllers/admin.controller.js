@@ -1,11 +1,14 @@
 import Admin from "../models/admin.model.js";
+import Course from "../models/course.model.js";
 import Student from "../models/Student.model.js";
 import Teacher from "../models/teacher.model.js";
 import TeacherRequest from "../models/teacherReqest.model.js";
 import { sendAdminProfileUpdatedEmail } from "../services/emails/adminEmail.service.js";
+import { sendCourseApprovalEmail, sendCourseRejectionEmail } from "../services/emails/courseEmail.service.js";
 import { sendTeacherRejectionEmail } from "../services/emails/teacherEmail.service.js";
 import { hashPassword } from "../utils/password.util.js";
-import { adminLoginSchema, adminUpdateProfileSchema, setAdminPasswordSchema, updateTeacherRequestSchema, updateUserBlockStatusSchema } from "../validations/admin.validataion.js";
+import { adminLoginSchema, adminUpdateProfileSchema, getStudentsSchema, getTeacherRequestsSchema, getTeachersSchema, setAdminPasswordSchema, updateTeacherRequestSchema, updateUserBlockStatusSchema } from "../validations/admin.validataion.js";
+import { getCoursesSchema, updateCourseApprovalSchema } from "../validations/course.validation.js";
 
 // ==================== SET ADMIN PASSWORD ====================
 
@@ -383,7 +386,296 @@ const updateStudentStatus = async (req, res) => {
   }
 };
 
+// Get all teacher requests with optional status filter
+const getTeacherRequests = async (req, res) => {
+  try {
+    // Validate query parameters
+    const { error, value } = getTeacherRequestsSchema.validate(req.query);
 
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    // Build filter dynamically
+    const filter = {};
+
+    if (value.status) {
+      filter.status = value.status;
+    }
+
+    // Fetch teacher requests
+    const teacherRequests = await TeacherRequest.find(filter)
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Teacher requests fetched successfully",
+      data: {
+        teacherRequests,
+      },
+    });
+  } catch (error) {
+    console.error("Get teacher requests error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+// Get all teachers with optional active and blocked filters
+const getTeachers = async (req, res) => {
+  try {
+    // Validate query parameters
+    const { error, value } = getTeachersSchema.validate(req.query);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    // Build filter dynamically
+    const filter = {};
+
+    if (value.isActive !== undefined) {
+      filter.isActive = value.isActive;
+    }
+
+    if (value.isBlocked !== undefined) {
+      filter.isBlocked = value.isBlocked;
+    }
+
+    // Fetch teachers
+    const teachers = await Teacher.find(filter)
+      .select("-password -passwordResetToken -passwordResetExpires")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Teachers fetched successfully",
+      data: {
+        teachers,
+      },
+    });
+  } catch (error) {
+    console.error("Get teachers error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+// Get all students with optional blocked filter
+const getStudents = async (req, res) => {
+  try {
+    // Validate query parameters
+    const { error, value } = getStudentsSchema.validate(req.query);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    // Build filter dynamically
+    const filter = {};
+
+    if (value.isBlocked !== undefined) {
+      filter.isBlocked = value.isBlocked;
+    }
+
+    // Fetch students
+    const students = await Student.find(filter)
+      .select("-password -emailVerificationToken -emailVerificationExpires -passwordResetToken -passwordResetExpires")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Students fetched successfully",
+      data: {
+        students,
+      },
+    });
+  } catch (error) {
+    console.error("Get students error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+// Get all courses with optional approval status filter
+const getCourses = async (req, res) => {
+  try {
+    // Validate query parameters
+    const { error, value } = getCoursesSchema.validate(req.query);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    // Build filter dynamically
+    const filter = {};
+
+    if (value.approvalStatus !== undefined) {
+      filter.approvalStatus = value.approvalStatus;
+    }
+
+    // Fetch courses with teacher and category details
+    const courses = await Course.find(filter)
+      .populate("teacher", "name email")
+      .populate("category", "name description")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Courses fetched successfully",
+      data: {
+        courses,
+      },
+    });
+  } catch (error) {
+    console.error("Get courses error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+// Approve or reject course
+const updateCourseApproval = async (req, res) => {
+  try {
+    // Validate approval/rejection data
+    const { error, value } = updateCourseApprovalSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    const { status, rejectionReason } = value;
+
+    // Find course with teacher details
+    const course = await Course.findById(req.params.id).populate(
+      "teacher",
+      "name email"
+    );
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Only pending courses can be approved or rejected
+    if (course.approvalStatus !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Only pending courses can be approved or rejected",
+      });
+    }
+
+    // Get reviewer ID from logged-in Admin or Super Admin
+    const reviewerId = req.admin?._id || req.superAdmin?._id;
+
+    if (!reviewerId) {
+      return res.status(403).json({
+        success: false,
+        message: "Reviewer information not found",
+      });
+    }
+
+    // Update approval status
+    course.approvalStatus = status;
+
+    if (status === "approved") {
+      course.approvedAt = new Date();
+      course.approvedBy = reviewerId;
+      course.rejectionReason = null;
+    }
+
+    if (status === "rejected") {
+      course.rejectionReason = rejectionReason;
+      course.approvedAt = null;
+      course.approvedBy = null;
+    }
+
+    await course.save();
+
+    // Notify teacher after approval
+    if (status === "approved") {
+      try {
+        await sendCourseApprovalEmail(course, course.teacher);
+      } catch (emailError) {
+        console.error(
+          "Course approval email failed:",
+          emailError.message
+        );
+      }
+    }
+
+    // Notify teacher after rejection
+    if (status === "rejected") {
+      try {
+        await sendCourseRejectionEmail(
+          course,
+          course.teacher,
+          rejectionReason
+        );
+      } catch (emailError) {
+        console.error(
+          "Course rejection email failed:",
+          emailError.message
+        );
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        status === "approved"
+          ? "Course approved successfully"
+          : "Course rejected successfully",
+      data: {
+        course: {
+          id: course._id,
+          title: course.title,
+          approvalStatus: course.approvalStatus,
+          rejectionReason: course.rejectionReason,
+          approvedAt: course.approvedAt,
+          approvedBy: course.approvedBy,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Update course approval error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 // Update admin profile
 const updateAdminProfile = async (req, res) => {
   try {
@@ -443,6 +735,28 @@ const updateAdminProfile = async (req, res) => {
     });
   }
 };
+
+// ==================== GET ADMIN PROFILE ====================
+
+const getAdminProfile = async (req, res) => {
+  try {
+    // Admin is already fetched by onlyAdminMiddleware
+    return res.status(200).json({
+      success: true,
+      message: "Admin profile fetched successfully",
+      data: req.admin,
+    });
+  } catch (error) {
+    // Handle profile fetch errors
+    console.error("Get admin profile error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   setAdminPassword,
   loginAdmin,
@@ -450,4 +764,10 @@ export {
   updateTeacherStatus,
   updateStudentStatus,
   updateAdminProfile,
+  getTeacherRequests,
+  getTeachers,
+  getStudents,
+  getCourses,
+  updateCourseApproval,
+  getAdminProfile
 };

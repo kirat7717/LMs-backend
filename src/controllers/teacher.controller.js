@@ -1,17 +1,23 @@
 import Teacher from "../models/teacher.model.js";
 import TeacherRequest from "../models/teacherReqest.model.js";
+import Admin from "../models/admin.model.js";
+
 import {
   teacherRegisterSchema,
   teacherLoginSchema,
   teacherResetPasswordSchema,
   teacherUpdateProfileSchema,
 } from "../validations/teacher.validation.js";
+
 import { hashPassword, comparePassword } from "../utils/password.util.js";
+
 import {
   generateVerificationToken,
   generateTokenExpiry,
 } from "../utils/verificationToken.util.js";
+
 import { generateAccessToken } from "../utils/jwt.util.js";
+
 import {
   sendTeacherRegistrationEmail,
   sendAdminTeacherRequestEmail,
@@ -19,7 +25,7 @@ import {
   sendTeacherPasswordChangedEmail,
   sendTeacherProfileUpdatedEmail,
 } from "../services/emails/teacherEmail.service.js";
-import Admin from "../models/admin.model.js";
+
 
 // ==================== REGISTER TEACHER ====================
 
@@ -56,7 +62,7 @@ const registerTeacher = async (req, res) => {
       });
     }
 
-    // Check whether a pending request already exists
+    // Check whether a pending teacher request already exists
     const existingRequest = await TeacherRequest.findOne({
       email,
       status: "pending",
@@ -94,26 +100,26 @@ const registerTeacher = async (req, res) => {
       );
     }
 
-    // Find an active Admin to notify about the new request
-  const admins = await Admin.find({
-  isActive: true,
-  isBlocked: false,
-}).select("email");
+    // Find active and unblocked admins
+    const admins = await Admin.find({
+      isActive: true,
+      isBlocked: false,
+    }).select("email");
 
-    // Send new teacher request notification to Admin
+    // Notify all active admins
     for (const admin of admins) {
-  try {
-    await sendAdminTeacherRequestEmail(
-      teacherRequest,
-      admin.email
-    );
-  } catch (emailError) {
-    console.error(
-      `Admin teacher request email failed for ${admin.email}:`,
-      emailError.message
-    );
-  }
-}
+      try {
+        await sendAdminTeacherRequestEmail(
+          teacherRequest,
+          admin.email
+        );
+      } catch (emailError) {
+        console.error(
+          `Admin teacher request email failed for ${admin.email}:`,
+          emailError.message
+        );
+      }
+    }
 
     return res.status(201).json({
       success: true,
@@ -134,6 +140,7 @@ const registerTeacher = async (req, res) => {
   }
 };
 
+
 // ==================== LOGIN TEACHER ====================
 
 const loginTeacher = async (req, res) => {
@@ -150,7 +157,7 @@ const loginTeacher = async (req, res) => {
 
     const { email, password } = value;
 
-    // Find approved teacher account
+    // Find teacher account
     const teacher = await Teacher.findOne({ email });
 
     if (!teacher) {
@@ -182,7 +189,10 @@ const loginTeacher = async (req, res) => {
     }
 
     // Generate JWT access token with teacher role
-    const token = generateAccessToken(teacher._id, "teacher");
+    const token = generateAccessToken(
+      teacher._id,
+      "teacher"
+    );
 
     return res.status(200).json({
       success: true,
@@ -212,16 +222,14 @@ const loginTeacher = async (req, res) => {
   }
 };
 
-// ==================== UPDATE PROFILE ====================
 
-
+// ==================== UPDATE TEACHER PROFILE ====================
 
 const updateTeacherProfile = async (req, res) => {
   try {
     // Validate teacher profile update data
-    const { error, value } = teacherUpdateProfileSchema.validate(
-      req.body
-    );
+    const { error, value } =
+      teacherUpdateProfileSchema.validate(req.body);
 
     if (error) {
       return res.status(400).json({
@@ -230,7 +238,7 @@ const updateTeacherProfile = async (req, res) => {
       });
     }
 
-    // Update authenticated teacher's profile
+    // Update authenticated teacher profile
     const teacher = await Teacher.findByIdAndUpdate(
       req.teacher._id,
       { $set: value },
@@ -267,7 +275,10 @@ const updateTeacherProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Update teacher profile error:", error.message);
+    console.error(
+      "Update teacher profile error:",
+      error.message
+    );
 
     return res.status(500).json({
       success: false,
@@ -276,7 +287,8 @@ const updateTeacherProfile = async (req, res) => {
   }
 };
 
-// ==================== FORGOT PASSWORD ====================
+
+// ==================== FORGOT TEACHER PASSWORD ====================
 
 const forgotTeacherPassword = async (req, res) => {
   try {
@@ -297,7 +309,7 @@ const forgotTeacherPassword = async (req, res) => {
     // Find teacher account
     const teacher = await Teacher.findOne({ email });
 
-    // Return same response even when email does not exist
+    // Return same response even if account does not exist
     if (!teacher) {
       return res.status(200).json({
         success: true,
@@ -306,7 +318,7 @@ const forgotTeacherPassword = async (req, res) => {
       });
     }
 
-    // Generate password reset token and expiry
+    // Generate reset token and expiry
     const resetToken = generateVerificationToken();
     const resetExpires = generateTokenExpiry(30);
 
@@ -317,7 +329,10 @@ const forgotTeacherPassword = async (req, res) => {
 
     // Send password reset email
     try {
-      await sendTeacherPasswordResetEmail(teacher, resetToken);
+      await sendTeacherPasswordResetEmail(
+        teacher,
+        resetToken
+      );
     } catch (emailError) {
       console.error(
         "Teacher password reset email failed:",
@@ -331,7 +346,10 @@ const forgotTeacherPassword = async (req, res) => {
         "If an account exists with this email, a password reset link has been sent",
     });
   } catch (error) {
-    console.error("Forgot teacher password error:", error.message);
+    console.error(
+      "Forgot teacher password error:",
+      error.message
+    );
 
     return res.status(500).json({
       success: false,
@@ -340,14 +358,14 @@ const forgotTeacherPassword = async (req, res) => {
   }
 };
 
-// ==================== RESET PASSWORD ====================
+
+// ==================== RESET TEACHER PASSWORD ====================
 
 const resetTeacherPassword = async (req, res) => {
   try {
     // Validate reset password data
-    const { error, value } = teacherResetPasswordSchema.validate(
-      req.body
-    );
+    const { error, value } =
+      teacherResetPasswordSchema.validate(req.body);
 
     if (error) {
       return res.status(400).json({
@@ -361,20 +379,23 @@ const resetTeacherPassword = async (req, res) => {
     // Find teacher using valid reset token
     const teacher = await Teacher.findOne({
       passwordResetToken: token,
-      passwordResetExpires: { $gt: new Date() },
+      passwordResetExpires: {
+        $gt: new Date(),
+      },
     });
 
     if (!teacher) {
       return res.status(400).json({
         success: false,
-        message: "Invalid or expired password reset token",
+        message:
+          "Invalid or expired password reset token",
       });
     }
 
-    // Hash the new password
+    // Hash new password
     teacher.password = await hashPassword(password);
 
-    // Clear password reset data after successful reset
+    // Clear reset token after successful password reset
     teacher.passwordResetToken = null;
     teacher.passwordResetExpires = null;
 
@@ -395,7 +416,10 @@ const resetTeacherPassword = async (req, res) => {
       message: "Password reset successfully",
     });
   } catch (error) {
-    console.error("Reset teacher password error:", error.message);
+    console.error(
+      "Reset teacher password error:",
+      error.message
+    );
 
     return res.status(500).json({
       success: false,
@@ -404,15 +428,43 @@ const resetTeacherPassword = async (req, res) => {
   }
 };
 
+
+// ==================== GET TEACHER PROFILE ====================
+
+const getTeacherProfile = async (req, res) => {
+  try {
+    // Teacher is already fetched by teacherMiddleware
+    return res.status(200).json({
+      success: true,
+      message: "Teacher profile fetched successfully",
+      data: req.teacher,
+    });
+  } catch (error) {
+    console.error(
+      "Get teacher profile error:",
+      error.message
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+
 // ==================== LOGOUT TEACHER ====================
-// Kept for later token invalidation implementation.
 
 const logoutTeacher = async (req, res) => {
+  // Token invalidation will be implemented later
   return res.status(200).json({
     success: true,
     message: "Teacher logged out successfully",
   });
 };
+
+
+// ==================== EXPORTS ====================
 
 export {
   registerTeacher,
@@ -420,5 +472,6 @@ export {
   updateTeacherProfile,
   forgotTeacherPassword,
   resetTeacherPassword,
+  getTeacherProfile,
   logoutTeacher,
 };
