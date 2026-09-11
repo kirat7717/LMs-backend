@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const adminSchema = new mongoose.Schema(
   {
     // ==================== BASIC INFORMATION ====================
+
     name: {
       type: String,
       required: true,
@@ -17,10 +18,21 @@ const adminSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Password will be set by Admin through setup link
+    bio: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    avatar: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     password: {
       type: String,
-      default: null,
+      required: true,
     },
 
     // ==================== ACCOUNT STATUS ====================
@@ -56,7 +68,7 @@ const adminSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Admin = mongoose.model("Admin", adminSchema);

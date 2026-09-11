@@ -5,7 +5,11 @@ import path from "path";
 // ==================== UPLOAD DIRECTORY ====================
 
 // Define image upload destination
-const uploadDirectory = path.join(process.cwd(), "public", "images");
+const uploadDirectory = path.join(
+  process.cwd(),
+  "public",
+  "images"
+);
 
 // Create upload directory if it does not exist
 if (!fs.existsSync(uploadDirectory)) {
@@ -22,7 +26,9 @@ const storage = multer.diskStorage({
 
   // Generate unique image filename
   filename: (req, file, cb) => {
-    const extension = path.extname(file.originalname).toLowerCase();
+    const extension = path
+      .extname(file.originalname)
+      .toLowerCase();
 
     const fileName = `${Date.now()}-${Math.round(
       Math.random() * 1e9
@@ -36,17 +42,26 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   // Get file extension from original filename
-  const extension = path.extname(file.originalname).toLowerCase();
+  const extension = path
+    .extname(file.originalname)
+    .toLowerCase();
 
-  // Allow only JPG, JPEG and PNG images
-  const allowedExtensions = [".jpg", ".jpeg", ".png"];
+  // Allowed image extensions
+  const allowedExtensions = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+  ];
 
+  // Validate file only by extension
   if (allowedExtensions.includes(extension)) {
     return cb(null, true);
   }
 
   // Reject unsupported file extensions
-  cb(new Error("Only JPG, JPEG and PNG images are allowed"));
+  return cb(
+    new Error("Only JPG, JPEG and PNG images are allowed")
+  );
 };
 
 // ==================== MULTER CONFIGURATION ====================

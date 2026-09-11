@@ -1,15 +1,15 @@
 import Admin from "../models/admin.model.js";
 import Course from "../models/course.model.js";
-import Student from "../models/Student.model.js";
+import Student from "../models/student.model.js";
 import Teacher from "../models/teacher.model.js";
 import TeacherRequest from "../models/teacherReqest.model.js";
 import { sendAdminProfileUpdatedEmail } from "../services/emails/adminEmail.service.js";
 import { sendCourseApprovalEmail, sendCourseRejectionEmail } from "../services/emails/courseEmail.service.js";
 import { sendTeacherRejectionEmail } from "../services/emails/teacherEmail.service.js";
-import { hashPassword } from "../utils/password.util.js";
+import { hashPassword,comparePassword } from "../utils/password.util.js";
 import { adminLoginSchema, adminUpdateProfileSchema, getStudentsSchema, getTeacherRequestsSchema, getTeachersSchema, setAdminPasswordSchema, updateTeacherRequestSchema, updateUserBlockStatusSchema } from "../validations/admin.validataion.js";
 import { getCoursesSchema, updateCourseApprovalSchema } from "../validations/course.validation.js";
-
+import { generateAccessToken } from "../utils/jwt.util.js";
 // ==================== SET ADMIN PASSWORD ====================
 
 const setAdminPassword = async (req, res) => {

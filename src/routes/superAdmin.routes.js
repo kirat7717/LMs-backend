@@ -12,31 +12,26 @@ import {
 import authMiddleware from "../middlewares/auth.middleware.js";
 import superAdminMiddleware from "../middlewares/superAdmin.middleware.js";
 
+import { getSuperAdminDashboard } from "../controllers/superAdmin.dashboard.controller.js";
+
 const router = express.Router();
 
-
-// ==================== PUBLIC SUPER ADMIN APIs ====================
+// ============================================================
+// PUBLIC SUPER ADMIN APIs
+// ============================================================
 
 // Super Admin login
-router.post(
-  "/login",
-  loginSuperAdmin
-);
+router.post("/login", loginSuperAdmin);
 
 // Forgot Super Admin password
-router.post(
-  "/forgot-password",
-  forgotSuperAdminPassword
-);
+router.post("/forgot-password", forgotSuperAdminPassword);
 
 // Reset Super Admin password
-router.post(
-  "/reset-password",
-  resetSuperAdminPassword
-);
+router.post("/reset-password", resetSuperAdminPassword);
 
-
-// ==================== PROTECTED SUPER ADMIN APIs ====================
+// ============================================================
+// PROTECTED SUPER ADMIN APIs
+// ============================================================
 
 // Get Super Admin profile
 router.get(
@@ -54,8 +49,9 @@ router.patch(
   updateSuperAdminProfile
 );
 
-
-// ==================== ADMIN MANAGEMENT ====================
+// ============================================================
+// ADMIN MANAGEMENT
+// ============================================================
 
 // Create new Admin
 router.post(
@@ -65,5 +61,15 @@ router.post(
   createAdmin
 );
 
+// ============================================================
+// SUPER ADMIN DASHBOARD
+// ============================================================
+
+router.get(
+  "/dashboard",
+  authMiddleware,
+  superAdminMiddleware,
+  getSuperAdminDashboard
+);
 
 export default router;

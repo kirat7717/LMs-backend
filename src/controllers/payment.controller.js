@@ -3,7 +3,13 @@ import Stripe from "stripe";
 import Course from "../models/course.model.js";
 import Payment from "../models/payment.model.js";
 import Enrollment from "../models/enrollment.model.js";
-import 'dotenv/config'
+import Student from "../models/student.model.js";
+
+import {
+  sendCourseEnrollmentSuccessEmail,
+} from "../services/emails/studentEmail.service.js";
+
+import "dotenv/config";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -13,7 +19,8 @@ const createCheckoutSession = async (req, res) => {
   try {
     const { courseId } = req.body;
 
-    // Check course
+    // ==================== CHECK COURSE ====================
+
     const course = await Course.findOne({
       _id: courseId,
       approvalStatus: "approved",
@@ -27,7 +34,8 @@ const createCheckoutSession = async (req, res) => {
       });
     }
 
-    // Only paid courses use Stripe
+    // ==================== ONLY PAID COURSES USE STRIPE ====================
+
     if (course.price <= 0) {
       return res.status(400).json({
         success: false,
@@ -35,7 +43,8 @@ const createCheckoutSession = async (req, res) => {
       });
     }
 
-    // Check existing enrollment
+    // ==================== CHECK EXISTING ENROLLMENT ====================
+
     const existingEnrollment = await Enrollment.findOne({
       student: req.student._id,
       course: course._id,
@@ -49,7 +58,26 @@ const createCheckoutSession = async (req, res) => {
       });
     }
 
-    // Create pending payment record
+    // ==================== CHECK PENDING PAYMENT ====================
+
+    const existingPendingPayment = await Payment.findOne({
+      student: req.student._id,
+      course: course._id,
+      status: "pending",
+    });
+
+    if (existingPendingPayment) {
+      return res.status(409).json({
+        success: false,
+        message: "A payment for this course is already in progress",
+        data: {
+          paymentId: existingPendingPayment._id,
+        },
+      });
+    }
+
+    // ==================== CREATE PENDING PAYMENT ====================
+
     const payment = await Payment.create({
       student: req.student._id,
       course: course._id,
@@ -58,7 +86,8 @@ const createCheckoutSession = async (req, res) => {
       status: "pending",
     });
 
-    // Create Stripe Checkout Session
+    // ==================== CREATE STRIPE CHECKOUT SESSION ====================
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
 
@@ -88,7 +117,8 @@ const createCheckoutSession = async (req, res) => {
       cancel_url: `${process.env.BASE_URL}/payment/cancelled`,
     });
 
-    // Store Stripe session ID
+    // ==================== STORE STRIPE SESSION ID ====================
+
     payment.stripeCheckoutSessionId = session.id;
 
     await payment.save();
@@ -101,7 +131,10 @@ const createCheckoutSession = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Create checkout session error:", error.message);
+    console.error(
+      "Create checkout session error:",
+      error.message
+    );
 
     return res.status(500).json({
       success: false,
@@ -109,6 +142,7 @@ const createCheckoutSession = async (req, res) => {
     });
   }
 };
+
 // ==================== STRIPE WEBHOOK ====================
 
 const handleStripeWebhook = async (req, res) => {
@@ -117,78 +151,214 @@ const handleStripeWebhook = async (req, res) => {
   let event;
 
   try {
-    // Verify that webhook request actually came from Stripe
+    // Verify that the webhook request actually came from Stripe
     event = stripe.webhooks.constructEvent(
       req.body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (error) {
-    console.error("Stripe webhook signature error:", error.message);
+    console.error(
+      "Stripe webhook signature error:",
+      error.message
+    );
 
-    return res.status(400).send(`Webhook Error: ${error.message}`);
+    return res.status(400).send(
+      `Webhook Error: ${error.message}`
+    );
   }
 
   try {
-    // Handle successful Checkout payment
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
+    // We only handle successful Checkout Session events
+    if (event.type !== "checkout.session.completed") {
+      return res.status(200).json({
+        success: true,
+        message: "Event received but not handled",
+      });
+    }
 
-      const {
-        paymentId,
-        studentId,
-        courseId,
-      } = session.metadata;
+    const session = event.data.object;
 
-      // Find our pending payment
-      const payment = await Payment.findById(paymentId);
+    // ==================== GET STRIPE METADATA ====================
 
-      if (!payment) {
-        return res.status(404).json({
-          success: false,
-          message: "Payment record not found",
-        });
-      }
+    const {
+      paymentId,
+      studentId,
+      courseId,
+    } = session.metadata || {};
 
-      // Prevent duplicate processing
-      if (payment.status === "paid") {
-        return res.status(200).json({
-          success: true,
-          message: "Payment already processed",
-        });
-      }
+    // Make sure required metadata exists
+    if (!paymentId || !studentId || !courseId) {
+      console.error("Missing required Stripe metadata");
 
-      // Update payment
-      payment.status = "paid";
-      payment.paidAt = new Date();
-      payment.stripePaymentIntentId = session.payment_intent;
+      return res.status(400).json({
+        success: false,
+        message: "Required payment metadata is missing",
+      });
+    }
 
-      await payment.save();
+    // ==================== CHECK PAYMENT STATUS ====================
 
-      // Check whether enrollment already exists
-      const existingEnrollment = await Enrollment.findOne({
+    // Make sure Stripe confirms that the payment is actually paid
+    if (session.payment_status !== "paid") {
+      return res.status(200).json({
+        success: true,
+        message: "Payment is not completed yet",
+      });
+    }
+
+    // ==================== FETCH DATABASE RECORDS ====================
+
+    const [payment, student, course] = await Promise.all([
+      Payment.findById(paymentId),
+      Student.findById(studentId).select("name email"),
+      Course.findOne({
+        _id: courseId,
+        approvalStatus: "approved",
+        isActive: true,
+      }),
+    ]);
+
+    // ==================== CHECK PAYMENT ====================
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment record not found",
+      });
+    }
+
+    // ==================== VERIFY PAYMENT OWNER ====================
+
+    // Stripe student ID must match our local payment record
+    if (
+      payment.student.toString() !==
+      studentId.toString()
+    ) {
+      console.error(
+        "Stripe student metadata does not match payment record"
+      );
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Payment student does not match payment record",
+      });
+    }
+
+    // ==================== VERIFY PAYMENT COURSE ====================
+
+    // Stripe course ID must match our local payment record
+    if (
+      payment.course.toString() !==
+      courseId.toString()
+    ) {
+      console.error(
+        "Stripe course metadata does not match payment record"
+      );
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Payment course does not match payment record",
+      });
+    }
+
+    // ==================== VERIFY STRIPE SESSION ====================
+
+    // Stored Stripe Checkout Session ID must match
+    // the session that triggered this webhook
+    if (
+      payment.stripeCheckoutSessionId !== session.id
+    ) {
+      console.error(
+        "Stripe checkout session does not match payment record"
+      );
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment session",
+      });
+    }
+
+    // ==================== CHECK STUDENT ====================
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    // ==================== CHECK COURSE ====================
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found or not available",
+      });
+    }
+
+    // ==================== PREVENT DUPLICATE WEBHOOK ====================
+
+    if (payment.status === "paid") {
+      return res.status(200).json({
+        success: true,
+        message: "Payment already processed",
+      });
+    }
+
+    // ==================== CHECK EXISTING ENROLLMENT ====================
+
+    let enrollment = await Enrollment.findOne({
+      student: studentId,
+      course: courseId,
+    });
+
+    // Create enrollment only if it does not already exist
+    if (!enrollment) {
+      enrollment = await Enrollment.create({
         student: studentId,
         course: courseId,
+        payment: payment._id,
+        status: "active",
+        progress: 0,
       });
-
-      // Create enrollment only once
-      if (!existingEnrollment) {
-        await Enrollment.create({
-          student: studentId,
-          course: courseId,
-          payment: payment._id,
-          status: "active",
-          progress: 0,
-        });
-      }
     }
+
+    // ==================== MARK PAYMENT AS PAID ====================
+
+    payment.status = "paid";
+    payment.paidAt = new Date();
+    payment.stripePaymentIntentId =
+      session.payment_intent || null;
+
+    await payment.save();
+
+    // ==================== SEND ENROLLMENT EMAIL ====================
+
+    // Send email after payment + enrollment are confirmed
+    await sendCourseEnrollmentSuccessEmail(
+      student,
+      course,
+      payment
+    );
 
     return res.status(200).json({
       success: true,
-      message: "Webhook received successfully",
+      message:
+        "Payment processed and course enrollment completed",
+      data: {
+        paymentId: payment._id,
+        enrollmentId: enrollment._id,
+        courseId: course._id,
+      },
     });
   } catch (error) {
-    console.error("Stripe webhook processing error:", error.message);
+    console.error(
+      "Stripe webhook processing error:",
+      error.message
+    );
 
     return res.status(500).json({
       success: false,
@@ -197,8 +367,9 @@ const handleStripeWebhook = async (req, res) => {
   }
 };
 
+// ==================== EXPORTS ====================
+
 export {
   createCheckoutSession,
   handleStripeWebhook,
 };
-

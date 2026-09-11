@@ -324,3 +324,36 @@ export const sendStudentEmailChangedEmail = async (
     }),
   });
 };
+// ==================== COURSE ENROLLMENT SUCCESS EMAIL ====================
+
+export const sendCourseEnrollmentSuccessEmail = async (
+  student,
+  course,
+  payment
+) => {
+  return await sendMail({
+    to: student.email,
+    subject: "Course Enrollment Successful 🎉",
+    html: emailTemplate({
+      title: "Course Enrollment Successful",
+      greeting: `Hi <strong>${student.name}</strong>,`,
+      content: `
+        <p style="color:#374151; line-height:1.6;">
+          Your payment for <strong>${course.title}</strong> was successful.
+        </p>
+
+        <p style="color:#374151; line-height:1.6;">
+          You have successfully enrolled in this course and can now start learning.
+        </p>
+
+        <p style="color:#374151; line-height:1.6;">
+          <strong>Course:</strong> ${course.title}<br/>
+          <strong>Amount Paid:</strong> ₹${payment.amount}<br/>
+          <strong>Payment Status:</strong> Successful
+        </p>
+      `,
+      buttonText: "Start Learning",
+      buttonUrl: `${process.env.FRONTEND_URL}/courses/${course._id}`,
+    }),
+  });
+};

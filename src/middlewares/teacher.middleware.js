@@ -23,6 +23,14 @@ const teacherMiddleware = async (req, res, next) => {
       });
     }
 
+    // Check whether teacher account is active
+    if (!teacher.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Your teacher account is inactive",
+      });
+    }
+
     // Check whether teacher account is blocked
     if (teacher.isBlocked) {
       return res.status(403).json({

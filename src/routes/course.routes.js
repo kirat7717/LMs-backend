@@ -15,6 +15,7 @@ import {
 import authMiddleware from "../middlewares/auth.middleware.js";
 import teacherMiddleware from "../middlewares/teacher.middleware.js";
 import uploadVideo from "../middlewares/uploadVideo.middleware.js";
+import validateObjectId from "../middlewares/validateObjectId.middleware.js";
 
 const router = express.Router();
 
@@ -26,7 +27,11 @@ const router = express.Router();
 router.get("/", getCourses);
 
 // Get single approved course detail
-router.get("/:id", getCourseDetail);
+router.get(
+  "/:id",
+  validateObjectId("id"),
+  getCourseDetail
+);
 
 
 /* =========================
@@ -46,6 +51,7 @@ router.patch(
   "/:id",
   authMiddleware,
   teacherMiddleware,
+  validateObjectId("id"),
   updateCourse
 );
 
@@ -54,6 +60,7 @@ router.post(
   "/:courseId/sections",
   authMiddleware,
   teacherMiddleware,
+  validateObjectId("courseId"),
   addSection
 );
 
@@ -62,6 +69,8 @@ router.patch(
   "/:courseId/sections/:sectionId",
   authMiddleware,
   teacherMiddleware,
+  validateObjectId("courseId"),
+  validateObjectId("sectionId"),
   updateSection
 );
 
@@ -70,6 +79,8 @@ router.delete(
   "/:courseId/sections/:sectionId",
   authMiddleware,
   teacherMiddleware,
+  validateObjectId("courseId"),
+  validateObjectId("sectionId"),
   deleteSection
 );
 
@@ -78,16 +89,11 @@ router.delete(
   "/:courseId/sections/:sectionId/lectures/:lectureId",
   authMiddleware,
   teacherMiddleware,
+  validateObjectId("courseId"),
+  validateObjectId("sectionId"),
+  validateObjectId("lectureId"),
   deleteLecture
 );
 
-// Upload lecture video
-router.post(
-  "/:courseId/sections/:sectionId/lectures/:lectureId/video",
-  authMiddleware,
-  teacherMiddleware,
-  uploadVideo.single("video"),
-  uploadLectureVideo
-);
 
 export default router;

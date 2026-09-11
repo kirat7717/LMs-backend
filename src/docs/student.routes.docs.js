@@ -1,263 +1,348 @@
 /**
  * @swagger
- * tags:
- *   - name: Students
- *     description: Student authentication and profile APIs
- */
-
-/**
- * @swagger
- * /api/students/register:
+ * /api/students/enroll/{courseId}:
  *   post:
- *     summary: Register a new student
+ *     summary: Enroll in a course
  *     tags: [Students]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *               - confirmPassword
- *             properties:
- *               name:
- *                 type: string
- *                 example: Rahul Sharma
- *               email:
- *                 type: string
- *                 example: rahul@example.com
- *               password:
- *                 type: string
- *                 example: Password123
- *               confirmPassword:
- *                 type: string
- *                 example: Password123
- *               bio:
- *                 type: string
- *                 example: Backend learner
- *               avatar:
- *                 type: string
- *                 example: http://localhost:9000/images/avatar.png
- *     responses:
- *       201:
- *         description: Student registered successfully. Account verification link sent.
- *       400:
- *         description: Validation error
- *       409:
- *         description: Student already exists
- *       500:
- *         description: Server error
- */
-
-/**
- * @swagger
- * /api/students/verify-account:
- *   get:
- *     summary: Verify student account
- *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: path
+ *         name: courseId
  *         required: true
  *         schema:
  *           type: string
- *         description: Temporary student account verification token
- *         example: verification-token-here
+ *         description: MongoDB ID of the course
+ *         example: 68a123456789abcdef123456
  *     responses:
- *       200:
- *         description: Student account verified successfully
+ *       201:
+ *         description: Student enrolled successfully
  *       400:
- *         description: Verification token is missing, invalid, or expired
- *       500:
- *         description: Server error
- */
-
-/**
- * @swagger
- * /api/students/resend-verification:
- *   post:
- *     summary: Resend student account verification email
- *     tags: [Students]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 example: rahul@example.com
- *     responses:
- *       200:
- *         description: Account verification email sent successfully
- *       400:
- *         description: Validation error or student account is already verified
- *       404:
- *         description: Student not found
- *       500:
- *         description: Server error
- */
-
-/**
- * @swagger
- * /api/students/login:
- *   post:
- *     summary: Login student
- *     tags: [Students]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 example: rahul@example.com
- *               password:
- *                 type: string
- *                 example: Password123
- *     responses:
- *       200:
- *         description: Student logged in successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Invalid credentials
- *       403:
- *         description: Student account is not verified or is blocked
- *       500:
- *         description: Server error
- */
-
-/**
- * @swagger
- * /api/students/forgot-password:
- *   post:
- *     summary: Request student password reset
- *     tags: [Students]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 example: rahul@example.com
- *     responses:
- *       200:
- *         description: Password reset email sent successfully
- *       400:
- *         description: Validation error
- *       404:
- *         description: Student not found
- *       500:
- *         description: Server error
- */
-
-/**
- * @swagger
- * /api/students/reset-password:
- *   post:
- *     summary: Reset student password
- *     tags: [Students]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - token
- *               - password
- *               - confirmPassword
- *             properties:
- *               token:
- *                 type: string
- *                 example: reset-token-here
- *               password:
- *                 type: string
- *                 example: NewPassword123
- *               confirmPassword:
- *                 type: string
- *                 example: NewPassword123
- *     responses:
- *       200:
- *         description: Password reset successfully
- *       400:
- *         description: Invalid or expired reset token
- *       500:
- *         description: Server error
- */
-
-/**
- * @swagger
- * /api/students/profile:
- *   put:
- *     summary: Update student profile
- *     tags: [Students]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: Rahul Sharma
- *               bio:
- *                 type: string
- *                 example: Full stack developer
- *               avatar:
- *                 type: string
- *                 example: http://localhost:9000/images/avatar.png
- *     responses:
- *       200:
- *         description: Student profile updated successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Authentication required
- *       403:
- *         description: Student access required or account blocked
- *       404:
- *         description: Student not found
- *       500:
- *         description: Server error
- */
-/**
- * @swagger
- * /api/students/profile:
- *   get:
- *     tags:
- *       - Students
- *     summary: Get student profile
- *     description: Returns the profile of the currently authenticated student.
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Student profile fetched successfully
+ *         description: Invalid course ID or validation error
  *       401:
  *         description: Authentication token is missing or invalid
  *       403:
- *         description: Access denied, student access required, or account is blocked
+ *         description: Access denied or course is not available
+ *       404:
+ *         description: Course not found
+ *       409:
+ *         description: Student is already enrolled
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/students/enrollments:
+ *   get:
+ *     summary: Get student's enrollments
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Student enrollments fetched successfully
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Student access required or account blocked
+ *       404:
+ *         description: Student account not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/students/enrollments/{courseId}:
+ *   get:
+ *     summary: Get enrolled course details
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the enrolled course
+ *         example: 68a123456789abcdef123456
+ *     responses:
+ *       200:
+ *         description: Enrolled course details fetched successfully
+ *       400:
+ *         description: Invalid course ID
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Student access required, account blocked, or student is not enrolled
+ *       404:
+ *         description: Course not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/students/courses/{courseId}/sections/{sectionId}/lectures/{lectureId}:
+ *   get:
+ *     summary: Get lecture details
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the course
+ *         example: 68a123456789abcdef123456
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the section
+ *         example: 68a123456789abcdef123457
+ *       - in: path
+ *         name: lectureId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the lecture
+ *         example: 68a123456789abcdef123458
+ *     responses:
+ *       200:
+ *         description: Lecture details fetched successfully
+ *       400:
+ *         description: Invalid course, section, or lecture ID
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Student is not enrolled or does not have access
+ *       404:
+ *         description: Course, section, or lecture not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/students/courses/{courseId}/sections/{sectionId}/lectures/{lectureId}/video:
+ *   get:
+ *     summary: Get protected lecture video
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the course
+ *         example: 68a123456789abcdef123456
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the section
+ *         example: 68a123456789abcdef123457
+ *       - in: path
+ *         name: lectureId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the lecture
+ *         example: 68a123456789abcdef123458
+ *     responses:
+ *       200:
+ *         description: Protected lecture video
+ *         content:
+ *           video/mp4:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           video/webm:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Invalid course, section, or lecture ID
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Student is not enrolled or does not have access
+ *       404:
+ *         description: Course, section, or lecture not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/students/courses/{courseId}/progress:
+ *   patch:
+ *     summary: Update course lecture progress
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the course
+ *         example: 68a123456789abcdef123456
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - lectureId
+ *               - watchedDuration
+ *               - lastPosition
+ *               - isCompleted
+ *             properties:
+ *               lectureId:
+ *                 type: string
+ *                 description: MongoDB ID of the lecture
+ *                 example: 68a123456789abcdef123458
+ *               watchedDuration:
+ *                 type: number
+ *                 description: Total watched duration in seconds
+ *                 example: 180
+ *               lastPosition:
+ *                 type: number
+ *                 description: Last playback position in seconds
+ *                 example: 175
+ *               isCompleted:
+ *                 type: boolean
+ *                 description: Whether the lecture is completed
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: Course progress updated successfully
+ *       400:
+ *         description: Validation error or invalid lecture ID
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Student is not enrolled or does not have access
+ *       404:
+ *         description: Course or lecture not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/students/courses/{courseId}/progress:
+ *   get:
+ *     summary: Get course progress
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ID of the enrolled course
+ *         example: 68a123456789abcdef123456
+ *     responses:
+ *       200:
+ *         description: Course progress fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Course progress fetched successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     courseId:
+ *                       type: string
+ *                       example: 68a123456789abcdef123456
+ *                     totalLectures:
+ *                       type: integer
+ *                       example: 12
+ *                     completedLectures:
+ *                       type: integer
+ *                       example: 7
+ *                     progress:
+ *                       type: integer
+ *                       example: 58
+ *                     status:
+ *                       type: string
+ *                       enum:
+ *                         - active
+ *                         - completed
+ *                         - cancelled
+ *                       example: active
+ *                     lectureProgress:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           lectureId:
+ *                             type: string
+ *                             example: 68a123456789abcdef123458
+ *                           title:
+ *                             type: string
+ *                             example: Introduction to Node.js
+ *                           duration:
+ *                             type: number
+ *                             example: 300
+ *                           watchedDuration:
+ *                             type: number
+ *                             example: 180
+ *                           lastPosition:
+ *                             type: number
+ *                             example: 175
+ *                           isCompleted:
+ *                             type: boolean
+ *                             example: false
+ *       400:
+ *         description: Invalid course ID
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Student is not enrolled in this course
+ *       404:
+ *         description: Course not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/students/dashboard:
+ *   get:
+ *     summary: Get student dashboard
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Student dashboard fetched successfully
+ *       401:
+ *         description: Authentication token is missing or invalid
+ *       403:
+ *         description: Student access required or account blocked
  *       404:
  *         description: Student account not found
  *       500:

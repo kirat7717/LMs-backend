@@ -12,7 +12,8 @@ import {
 } from "../controllers/admin.controller.js";
 
 import authMiddleware from "../middlewares/auth.middleware.js";
-import adminMiddleware from "../middlewares/admin.middleware.js";
+import adminSuperMiddleware from "../middlewares/adminSuperAdminMiddleware.js";
+import validateObjectId from "../middlewares/validateObjectId.middleware.js";
 
 import {
   createCategory,
@@ -23,14 +24,13 @@ import {
 
 const router = express.Router();
 
-
 // ==================== TEACHER MANAGEMENT ====================
 
 // Get all teacher registration requests
 router.get(
   "/teacher-requests",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
   getTeacherRequests
 );
 
@@ -38,7 +38,8 @@ router.get(
 router.patch(
   "/teacher-requests/:id",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
+  validateObjectId("id"),
   updateTeacherRequest
 );
 
@@ -46,7 +47,7 @@ router.patch(
 router.get(
   "/teachers",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
   getTeachers
 );
 
@@ -54,10 +55,10 @@ router.get(
 router.patch(
   "/teachers/:id/status",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
+  validateObjectId("id"),
   updateTeacherStatus
 );
-
 
 // ==================== STUDENT MANAGEMENT ====================
 
@@ -65,7 +66,7 @@ router.patch(
 router.get(
   "/students",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
   getStudents
 );
 
@@ -73,10 +74,10 @@ router.get(
 router.patch(
   "/students/:id/status",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
+  validateObjectId("id"),
   updateStudentStatus
 );
-
 
 // ==================== COURSE MANAGEMENT ====================
 
@@ -84,7 +85,7 @@ router.patch(
 router.get(
   "/courses",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
   getCourses
 );
 
@@ -92,10 +93,10 @@ router.get(
 router.patch(
   "/courses/:id",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
+  validateObjectId("id"),
   updateCourseApproval
 );
-
 
 // ==================== CATEGORY MANAGEMENT ====================
 
@@ -103,7 +104,7 @@ router.patch(
 router.post(
   "/categories",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
   createCategory
 );
 
@@ -111,22 +112,26 @@ router.post(
 router.patch(
   "/categories/:id",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
+  validateObjectId("id"),
   updateCategory
 );
+
+// Get all categories
 router.get(
   "/categories",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
   getCategories
 );
+
 // Delete category
 router.delete(
   "/categories/:id",
   authMiddleware,
-  adminMiddleware,
+  adminSuperMiddleware,
+  validateObjectId("id"),
   deleteCategory
 );
-
 
 export default router;

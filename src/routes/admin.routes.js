@@ -9,6 +9,7 @@ import {
 
 import authMiddleware from "../middlewares/auth.middleware.js";
 import adminMiddleware from "../middlewares/admin.middleware.js";
+import { getAdminDashboard } from "../controllers/admin.dashboard.controller.js";
 
 const router = express.Router();
 
@@ -44,6 +45,14 @@ router.patch(
   authMiddleware,
   adminMiddleware,
   updateAdminProfile
+);
+
+
+router.get(
+  "/dashboard",
+  authMiddleware,
+  adminMiddleware,
+  getAdminDashboard
 );
 
 

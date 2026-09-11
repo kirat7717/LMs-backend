@@ -1,10 +1,11 @@
-import Student from "../models/Student.model.js";
+import Student from "../models/student.model.js";
 import Joi from "joi";
 import {
   studentRegisterSchema,
   studentLoginSchema,
   studentResetPasswordSchema,
   studentUpdateProfileSchema,
+  updateCourseProgressSchema,
 } from "../validations/student.validation.js";
 import { hashPassword, comparePassword } from "../utils/password.util.js";
 import {
@@ -21,7 +22,9 @@ import {
 } from "../services/emails/studentEmail.service.js";
 import Course from "../models/course.model.js";
 import Enrollment from "../models/enrollment.model.js";
-
+import { getLectureAccess } from "../services/lecture/lecture.service.js";
+import fs from "fs";
+import path from "path";
 // ==================== REGISTER STUDENT ====================
 
 const registerStudent = async (req, res) => {
@@ -680,63 +683,34 @@ const getEnrolledCourseDetail = async (req, res) => {
   }
 };
 
+
 // ==================== GET LECTURE ====================
+
 
 const getLecture = async (req, res) => {
   try {
     const { courseId, sectionId, lectureId } = req.params;
 
-    // Check whether student is enrolled in the course
-    const enrollment = await Enrollment.findOne({
-      student: req.student._id,
-      course: courseId,
-      status: { $in: ["active", "completed"] },
-    }).lean();
+    // Reuse common lecture access checks
+    const result = await getLectureAccess({
+      studentId: req.student._id,
+      courseId,
+      sectionId,
+      lectureId,
+    });
 
-    if (!enrollment) {
-      return res.status(403).json({
+    // Handle access errors
+    if (result.error) {
+      return res.status(result.error.statusCode).json({
         success: false,
-        message: "You are not enrolled in this course",
+        message: result.error.message,
       });
     }
 
-    // Find the course
-    const course = await Course.findOne({
-      _id: courseId,
-      approvalStatus: "approved",
-      isActive: true,
-    }).lean();
+    const { course, section, lecture } = result;
 
-    if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found or not available",
-      });
-    }
-
-    // Find section
-    const section = course.sections.find(
-      (section) => section._id.toString() === sectionId
-    );
-
-    if (!section) {
-      return res.status(404).json({
-        success: false,
-        message: "Section not found",
-      });
-    }
-
-    // Find lecture
-    const lecture = section.lectures.find(
-      (lecture) => lecture._id.toString() === lectureId
-    );
-
-    if (!lecture) {
-      return res.status(404).json({
-        success: false,
-        message: "Lecture not found",
-      });
-    }
+    // Remove protected video URL from normal lecture response
+    const { videoUrl, ...publicLecture } = lecture;
 
     return res.status(200).json({
       success: true,
@@ -750,11 +724,76 @@ const getLecture = async (req, res) => {
           id: section._id,
           title: section.title,
         },
-        lecture,
+        lecture: publicLecture,
+
+        // Protected endpoint for video access
+        videoUrl: `/api/students/courses/${courseId}/sections/${sectionId}/lectures/${lectureId}/video`,
       },
     });
   } catch (error) {
     console.error("Get lecture error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+// ==================== GET PROTECTED LECTURE VIDEO ====================
+
+export const getLectureVideo = async (req, res) => {
+  try {
+    const { courseId, sectionId, lectureId } = req.params;
+
+    // Reuse common lecture access checks
+    const result = await getLectureAccess({
+      studentId: req.student._id,
+      courseId,
+      sectionId,
+      lectureId,
+    });
+
+    // Handle access errors
+    if (result.error) {
+      return res.status(result.error.statusCode).json({
+        success: false,
+        message: result.error.message,
+      });
+    }
+
+    const { lecture } = result;
+
+    // Check whether lecture has a video
+    if (!lecture.videoUrl) {
+      return res.status(404).json({
+        success: false,
+        message: "Video not available for this lecture",
+      });
+    }
+
+    // Get only the filename from stored video URL
+    const videoFileName = path.basename(lecture.videoUrl);
+
+    // Build actual video file path
+    const videoPath = path.join(
+      process.cwd(),
+      "public",
+      "videos",
+      videoFileName
+    );
+
+    // Check whether video file exists
+    if (!fs.existsSync(videoPath)) {
+      return res.status(404).json({
+        success: false,
+        message: "Video file not found",
+      });
+    }
+
+    // Send video only after authorization
+    return res.sendFile(videoPath);
+  } catch (error) {
+    console.error("Get lecture video error:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -948,7 +987,7 @@ export const updateCourseProgress = async (req, res) => {
   }
 };
 // ==================== GET COURSE PROGRESS ====================
-export const getCourseProgress = async (req, res) => {
+ const getCourseProgress = async (req, res) => {
   try {
     const { courseId } = req.params;
 

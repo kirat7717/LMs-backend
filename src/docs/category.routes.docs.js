@@ -1,17 +1,18 @@
 /**
  * @swagger
  * tags:
- *   - name: Categories
- *     description: Category management APIs accessible by Admin and Super Admin
+ *   - name: Category Management
+ *     description: Category management APIs for Admin and Super Admin
  */
 
 /**
  * @swagger
  * /api/admin/categories:
  *   post:
- *     summary: Create a new category (Admin & Super Admin)
  *     tags:
- *       - Categories
+ *       - Category Management
+ *     summary: Create a category
+ *     description: Create a new course category. Accessible by Admin and Super Admin.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -25,10 +26,10 @@
  *             properties:
  *               name:
  *                 type: string
- *                 example: Backend Development
+ *                 example: Web Development
  *               description:
  *                 type: string
- *                 example: Courses related to backend development
+ *                 example: Courses related to web development
  *     responses:
  *       201:
  *         description: Category created successfully
@@ -41,16 +42,34 @@
  *       409:
  *         description: Category already exists
  *       500:
- *         description: Server error
+ *         description: Internal server error
+ *
+ *   get:
+ *     tags:
+ *       - Category Management
+ *     summary: Get all categories
+ *     description: Fetch all categories sorted by newest first. Accessible by Admin and Super Admin.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Categories fetched successfully
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Super Admin access required
+ *       500:
+ *         description: Internal server error
  */
 
 /**
  * @swagger
  * /api/admin/categories/{id}:
  *   patch:
- *     summary: Update category (Admin & Super Admin)
  *     tags:
- *       - Categories
+ *       - Category Management
+ *     summary: Update a category
+ *     description: Update category details. Accessible by Admin and Super Admin.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -59,8 +78,8 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Category ID
- *         example: 64f123456789abcdef123456
+ *         description: Category MongoDB ObjectId
+ *         example: 64f1a2b3c4d5e6f789012345
  *     requestBody:
  *       required: true
  *       content:
@@ -70,10 +89,10 @@
  *             properties:
  *               name:
  *                 type: string
- *                 example: Advanced Backend Development
+ *                 example: Backend Development
  *               description:
  *                 type: string
- *                 example: Advanced backend development courses
+ *                 example: Courses related to backend development
  *               isActive:
  *                 type: boolean
  *                 example: true
@@ -81,7 +100,7 @@
  *       200:
  *         description: Category updated successfully
  *       400:
- *         description: Validation error
+ *         description: Validation error or invalid category ID
  *       401:
  *         description: Authentication required
  *       403:
@@ -91,5 +110,34 @@
  *       409:
  *         description: Category already exists
  *       500:
- *         description: Server error
+ *         description: Internal server error
+ *
+ *   delete:
+ *     tags:
+ *       - Category Management
+ *     summary: Delete a category
+ *     description: Delete a category permanently. Accessible by Admin and Super Admin.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Category MongoDB ObjectId
+ *         example: 64f1a2b3c4d5e6f789012345
+ *     responses:
+ *       200:
+ *         description: Category deleted successfully
+ *       400:
+ *         description: Invalid category ID
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Super Admin access required
+ *       404:
+ *         description: Category not found
+ *       500:
+ *         description: Internal server error
  */

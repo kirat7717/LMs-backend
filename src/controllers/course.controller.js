@@ -2,6 +2,8 @@ import Course from "../models/course.model.js";
 import Category from "../models/category.model.js";
 import Teacher from "../models/teacher.model.js";
 import Admin from "../models/admin.model.js";
+import fs from "fs";
+import path from "path";
 
 import {
   courseQuerySchema,
@@ -15,7 +17,6 @@ import {
   sendCourseSubmissionEmail,
   sendAdminNewCourseEmail,
   sendCourseUpdateEmail,
-
 } from "../services/emails/courseEmail.service.js";
 import paginate from "../utils/pagination.util.js";
 
@@ -32,14 +33,8 @@ const createCourse = async (req, res) => {
       });
     }
 
-    const {
-      title,
-      description,
-      thumbnail,
-      categoryId,
-      price,
-      sections,
-    } = value;
+    const { title, description, thumbnail, categoryId, price, sections } =
+      value;
 
     // Check whether category exists and is active
     const category = await Category.findOne({
@@ -56,7 +51,7 @@ const createCourse = async (req, res) => {
 
     // Get logged-in teacher
     const teacher = await Teacher.findById(req.teacher._id).select(
-      "name email"
+      "name email",
     );
 
     if (!teacher) {
@@ -82,10 +77,7 @@ const createCourse = async (req, res) => {
     try {
       await sendCourseSubmissionEmail(course, teacher);
     } catch (emailError) {
-      console.error(
-        "Course submission email failed:",
-        emailError.message
-      );
+      console.error("Course submission email failed:", emailError.message);
     }
 
     // Get all active and unblocked admins
@@ -97,15 +89,11 @@ const createCourse = async (req, res) => {
     // Notify all active and unblocked admins
     for (const admin of admins) {
       try {
-        await sendAdminNewCourseEmail(
-          course,
-          teacher,
-          admin.email
-        );
+        await sendAdminNewCourseEmail(course, teacher, admin.email);
       } catch (emailError) {
         console.error(
           `Admin course notification failed for ${admin.email}:`,
-          emailError.message
+          emailError.message,
         );
       }
     }
@@ -201,7 +189,7 @@ const updateCourse = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     // Send update confirmation email to the teacher
@@ -209,10 +197,7 @@ const updateCourse = async (req, res) => {
       await sendCourseUpdateEmail(updatedCourse, req.teacher);
     } catch (emailError) {
       // Email failure should not fail the course update
-      console.error(
-        "Course update email failed:",
-        emailError.message
-      );
+      console.error("Course update email failed:", emailError.message);
     }
 
     return res.status(200).json({
@@ -331,8 +316,9 @@ export const updateSection = async (req, res) => {
       });
     }
 
-    // Update section title
-    if (value.title) {
+    // ==================== UPDATE SECTION TITLE ====================
+
+    if (value.title !== undefined) {
       await Course.findByIdAndUpdate(
         req.params.courseId,
         {
@@ -341,16 +327,15 @@ export const updateSection = async (req, res) => {
           },
         },
         {
-          arrayFilters: [
-            { "section._id": req.params.sectionId },
-          ],
+          arrayFilters: [{ "section._id": req.params.sectionId }],
           new: true,
           runValidators: true,
         }
       );
     }
 
-    // Add lecture
+    // ==================== ADD LECTURE ====================
+
     if (value.lecture && !value.lectureId) {
       await Course.findByIdAndUpdate(
         req.params.courseId,
@@ -360,43 +345,64 @@ export const updateSection = async (req, res) => {
           },
         },
         {
-          arrayFilters: [
-            { "section._id": req.params.sectionId },
-          ],
+          arrayFilters: [{ "section._id": req.params.sectionId }],
           new: true,
           runValidators: true,
         }
       );
     }
 
-    // Update lecture
+    // ==================== UPDATE LECTURE ====================
+
     if (value.lectureId && value.lecture) {
-      await Course.findByIdAndUpdate(
-        req.params.courseId,
-        {
-          $set: {
-            "sections.$[section].lectures.$[lecture].title":
-              value.lecture.title,
-            "sections.$[section].lectures.$[lecture].thumbnail":
-              value.lecture.thumbnail,
-            "sections.$[section].lectures.$[lecture].videoUrl":
-              value.lecture.videoUrl,
-            "sections.$[section].lectures.$[lecture].duration":
-              value.lecture.duration,
+      // Build $set dynamically so only provided fields are updated
+      const lectureUpdates = {};
+
+      if (value.lecture.title !== undefined) {
+        lectureUpdates[
+          "sections.$[section].lectures.$[lecture].title"
+        ] = value.lecture.title;
+      }
+
+      if (value.lecture.thumbnail !== undefined) {
+        lectureUpdates[
+          "sections.$[section].lectures.$[lecture].thumbnail"
+        ] = value.lecture.thumbnail;
+      }
+
+      if (value.lecture.videoUrl !== undefined) {
+        lectureUpdates[
+          "sections.$[section].lectures.$[lecture].videoUrl"
+        ] = value.lecture.videoUrl;
+      }
+
+      if (value.lecture.duration !== undefined) {
+        lectureUpdates[
+          "sections.$[section].lectures.$[lecture].duration"
+        ] = value.lecture.duration;
+      }
+
+      // Only run update when at least one lecture field is provided
+      if (Object.keys(lectureUpdates).length > 0) {
+        await Course.findByIdAndUpdate(
+          req.params.courseId,
+          {
+            $set: lectureUpdates,
           },
-        },
-        {
-          arrayFilters: [
-            { "section._id": req.params.sectionId },
-            { "lecture._id": value.lectureId },
-          ],
-          new: true,
-          runValidators: true,
-        }
-      );
+          {
+            arrayFilters: [
+              { "section._id": req.params.sectionId },
+              { "lecture._id": value.lectureId },
+            ],
+            new: true,
+            runValidators: true,
+          }
+        );
+      }
     }
 
-    // Get updated course
+    // ==================== GET UPDATED COURSE ====================
+
     const updatedCourse = await Course.findById(req.params.courseId);
 
     return res.status(200).json({
@@ -426,9 +432,7 @@ export const deleteSection = async (req, res) => {
     }
 
     // Check teacher ownership
-    if (
-      course.teacher.toString() !== req.teacher._id.toString()
-    ) {
+    if (course.teacher.toString() !== req.teacher._id.toString()) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to modify this course",
@@ -477,9 +481,7 @@ export const deleteLecture = async (req, res) => {
     }
 
     // Check teacher ownership
-    if (
-      course.teacher.toString() !== req.teacher._id.toString()
-    ) {
+    if (course.teacher.toString() !== req.teacher._id.toString()) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to modify this course",
@@ -525,9 +527,6 @@ export const deleteLecture = async (req, res) => {
   }
 };
 // ==================== GET ALL AVAILABLE COURSES ====================
-
-
-
 
 // ==================== GET ALL COURSES ====================
 
@@ -631,7 +630,7 @@ const getCourseDetail = async (req, res) => {
       isActive: true,
     })
       .select(
-        "title description thumbnail category teacher price sections createdAt updatedAt"
+        "title description thumbnail category teacher price sections createdAt updatedAt",
       )
       .populate({
         path: "category",
@@ -660,6 +659,15 @@ const getCourseDetail = async (req, res) => {
       });
     }
 
+    // Remove protected video URLs from public course response
+    course.sections = course.sections.map((section) => ({
+      ...section,
+      lectures: section.lectures.map((lecture) => {
+        const { videoUrl, ...publicLecture } = lecture;
+        return publicLecture;
+      }),
+    }));
+
     return res.status(200).json({
       success: true,
       message: "Course details fetched successfully",
@@ -667,6 +675,8 @@ const getCourseDetail = async (req, res) => {
         course,
       },
     });
+
+ 
   } catch (error) {
     // Handle course details errors
     console.error("Get course details error:", error.message);
@@ -677,8 +687,6 @@ const getCourseDetail = async (req, res) => {
     });
   }
 };
-
-
 
 // ==================== GET TEACHER COURSES ====================
 
@@ -736,10 +744,7 @@ const getTeacherCourseDetail = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(
-      "Get teacher course details error:",
-      error.message
-    );
+    console.error("Get teacher course details error:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -749,6 +754,11 @@ const getTeacherCourseDetail = async (req, res) => {
 };
 // ==================== UPLOAD LECTURE VIDEO ====================
 const uploadLectureVideo = async (req, res) => {
+  // Keep uploaded file path so it can be deleted if any validation fails
+  const uploadedFilePath = req.file
+    ? path.join(process.cwd(), "public", "videos", req.file.filename)
+    : null;
+
   try {
     // Check whether a video was uploaded
     if (!req.file) {
@@ -762,6 +772,11 @@ const uploadLectureVideo = async (req, res) => {
     const course = await Course.findById(req.params.courseId);
 
     if (!course) {
+      // Delete uploaded video because course does not exist
+      if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+        fs.unlinkSync(uploadedFilePath);
+      }
+
       return res.status(404).json({
         success: false,
         message: "Course not found",
@@ -770,6 +785,11 @@ const uploadLectureVideo = async (req, res) => {
 
     // Teacher can update only their own course
     if (course.teacher.toString() !== req.teacher._id.toString()) {
+      // Delete uploaded video because teacher is not the owner
+      if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+        fs.unlinkSync(uploadedFilePath);
+      }
+
       return res.status(403).json({
         success: false,
         message: "You can only update your own course",
@@ -780,6 +800,11 @@ const uploadLectureVideo = async (req, res) => {
     const section = course.sections.id(req.params.sectionId);
 
     if (!section) {
+      // Delete uploaded video because section does not exist
+      if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+        fs.unlinkSync(uploadedFilePath);
+      }
+
       return res.status(404).json({
         success: false,
         message: "Section not found",
@@ -790,13 +815,18 @@ const uploadLectureVideo = async (req, res) => {
     const lecture = section.lectures.id(req.params.lectureId);
 
     if (!lecture) {
+      // Delete uploaded video because lecture does not exist
+      if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+        fs.unlinkSync(uploadedFilePath);
+      }
+
       return res.status(404).json({
         success: false,
         message: "Lecture not found",
       });
     }
 
-    // Generate public video URL
+    // Generate video URL
     const videoUrl = `${process.env.BASE_URL}/videos/${req.file.filename}`;
 
     // Save video URL
@@ -819,13 +849,17 @@ const uploadLectureVideo = async (req, res) => {
   } catch (error) {
     console.error("Upload lecture video error:", error.message);
 
+    // Delete uploaded video if any error occurs after upload
+    if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+      fs.unlinkSync(uploadedFilePath);
+    }
+
     return res.status(500).json({
       success: false,
       message: "Something went wrong",
     });
   }
 };
-
 
 export {
   createCourse,

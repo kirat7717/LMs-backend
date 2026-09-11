@@ -14,10 +14,15 @@ import {
   getEnrolledCourseDetail,
   getLecture,
   updateCourseProgress,
+  getLectureVideo,
+  getCourseProgress,
 } from "../controllers/student.controller.js";
 
 import authMiddleware from "../middlewares/auth.middleware.js";
 import studentMiddleware from "../middlewares/student.middleware.js";
+import validateObjectId from "../middlewares/validateObjectId.middleware.js";
+
+import { getStudentDashboard } from "../controllers/student.dashboard.controller.js";
 
 const router = express.Router();
 
@@ -53,6 +58,7 @@ router.put(
   studentMiddleware,
   updateStudentProfile
 );
+
 // ==================== GET STUDENT PROFILE ====================
 
 router.get(
@@ -62,14 +68,18 @@ router.get(
   getStudentProfile
 );
 
+
+
 // ==================== ENROLL IN COURSE ====================
 
 router.post(
   "/enroll/:courseId",
   authMiddleware,
   studentMiddleware,
+  validateObjectId("courseId"),
   enrollInCourse
 );
+
 // ==================== MY ENROLLMENTS ====================
 
 router.get(
@@ -78,12 +88,14 @@ router.get(
   studentMiddleware,
   getMyEnrollments
 );
+
 // ==================== ENROLLED COURSE DETAIL ====================
 
 router.get(
   "/enrollments/:courseId",
   authMiddleware,
   studentMiddleware,
+  validateObjectId("courseId"),
   getEnrolledCourseDetail
 );
 
@@ -93,15 +105,50 @@ router.get(
   "/courses/:courseId/sections/:sectionId/lectures/:lectureId",
   authMiddleware,
   studentMiddleware,
+  validateObjectId("courseId"),
+  validateObjectId("sectionId"),
+  validateObjectId("lectureId"),
   getLecture
 );
 
+// ==================== LECTURE VIDEO ====================
+
+router.get(
+  "/courses/:courseId/sections/:sectionId/lectures/:lectureId/video",
+  authMiddleware,
+  studentMiddleware,
+  validateObjectId("courseId"),
+  validateObjectId("sectionId"),
+  validateObjectId("lectureId"),
+  getLectureVideo
+);
+
+// Get progress of a specific course
+router.get(
+  "/courses/:courseId/progress",
+  authMiddleware,
+  studentMiddleware,
+  validateObjectId("courseId"),
+  getCourseProgress
+);
+
 // ==================== UPDATE COURSE PROGRESS ====================
+
 router.patch(
   "/courses/:courseId/progress",
   authMiddleware,
   studentMiddleware,
+  validateObjectId("courseId"),
   updateCourseProgress
+);
+
+// ==================== STUDENT DASHBOARD ====================
+
+router.get(
+  "/dashboard",
+  authMiddleware,
+  studentMiddleware,
+  getStudentDashboard
 );
 
 export default router;
