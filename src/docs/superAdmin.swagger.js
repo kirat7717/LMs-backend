@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /super-admin/login:
+ * /api/super-admin/login:
  *   post:
  *     summary: Login
  *     tags:
@@ -48,7 +48,7 @@
 
 /**
  * @swagger
- * /super-admin/forgot-password:
+ * /api/super-admin/forgot-password:
  *   post:
  *     summary: Forgot Password
  *     tags:
@@ -85,7 +85,7 @@
 
 /**
  * @swagger
- * /super-admin/reset-password:
+ * /api/super-admin/reset-password:
  *   post:
  *     summary: Reset Password
  *     tags:
@@ -130,7 +130,7 @@
 
 /**
  * @swagger
- * /super-admin/profile:
+ * /api/super-admin/profile:
  *   get:
  *     summary: Get Profile
  *     tags:
@@ -157,7 +157,7 @@
 
 /**
  * @swagger
- * /super-admin/profile:
+ * /api/super-admin/profile:
  *   patch:
  *     summary: Update Profile
  *     tags:
@@ -202,7 +202,7 @@
 
 /**
  * @swagger
- * /super-admin/admins:
+ * /api/super-admin/admins:
  *   post:
  *     summary: Create Admin
  *     tags:
@@ -245,7 +245,7 @@
 
 /**
  * @swagger
- * /super-admin/dashboard:
+ * /api/super-admin/dashboard:
  *   get:
  *     summary: Dashboard
  *     tags:

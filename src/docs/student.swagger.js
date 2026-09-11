@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /students/register:
+ * /api/students/register:
  *   post:
  *     summary: Register
  *     tags:
@@ -52,7 +52,7 @@
 
 /**
  * @swagger
- * /students/verify-account:
+ * /api/students/verify-account:
  *   get:
  *     summary: Verify Account
  *     tags:
@@ -84,7 +84,7 @@
 
 /**
  * @swagger
- * /students/resend-verification:
+ * /api/students/resend-verification:
  *   post:
  *     summary: Resend Verification
  *     tags:
@@ -121,7 +121,7 @@
 
 /**
  * @swagger
- * /students/login:
+ * /api/students/login:
  *   post:
  *     summary: Login
  *     tags:
@@ -162,7 +162,7 @@
 
 /**
  * @swagger
- * /students/forgot-password:
+ * /api/students/forgot-password:
  *   post:
  *     summary: Forgot Password
  *     tags:
@@ -199,7 +199,7 @@
 
 /**
  * @swagger
- * /students/reset-password:
+ * /api/students/reset-password:
  *   post:
  *     summary: Reset Password
  *     tags:
@@ -244,7 +244,7 @@
 
 /**
  * @swagger
- * /students/profile:
+ * /api/students/profile:
  *   get:
  *     summary: Get Profile
  *     tags:
@@ -271,7 +271,7 @@
 
 /**
  * @swagger
- * /students/profile:
+ * /api/students/profile:
  *   put:
  *     summary: Update Profile
  *     tags:
@@ -316,7 +316,7 @@
 
 /**
  * @swagger
- * /students/enroll/{courseId}:
+ * /api/students/enroll/{courseId}:
  *   post:
  *     summary: Enroll Course
  *     tags:
@@ -351,7 +351,7 @@
 
 /**
  * @swagger
- * /students/enrollments:
+ * /api/students/enrollments:
  *   get:
  *     summary: My Enrollments
  *     tags:
@@ -378,7 +378,7 @@
 
 /**
  * @swagger
- * /students/enrollments/{courseId}:
+ * /api/students/enrollments/{courseId}:
  *   get:
  *     summary: Enrolled Course Detail
  *     tags:
@@ -413,7 +413,7 @@
 
 /**
  * @swagger
- * /students/courses/{courseId}/sections/{sectionId}/lectures/{lectureId}:
+ * /api/students/courses/{courseId}/sections/{sectionId}/lectures/{lectureId}:
  *   get:
  *     summary: Get Lecture
  *     tags:
@@ -462,7 +462,7 @@
 
 /**
  * @swagger
- * /students/courses/{courseId}/sections/{sectionId}/lectures/{lectureId}/video:
+ * /api/students/courses/{courseId}/sections/{sectionId}/lectures/{lectureId}/video:
  *   get:
  *     summary: Get Lecture Video
  *     tags:
@@ -511,7 +511,7 @@
 
 /**
  * @swagger
- * /students/courses/{courseId}/progress:
+ * /api/students/courses/{courseId}/progress:
  *   patch:
  *     summary: Update Course Progress
  *     tags:
@@ -567,7 +567,7 @@
 
 /**
  * @swagger
- * /students/courses/{courseId}/progress:
+ * /api/students/courses/{courseId}/progress:
  *   get:
  *     summary: Get Course Progress
  *     tags:
@@ -602,7 +602,7 @@
 
 /**
  * @swagger
- * /students/dashboard:
+ * /api/students/dashboard:
  *   get:
  *     summary: Dashboard
  *     tags:

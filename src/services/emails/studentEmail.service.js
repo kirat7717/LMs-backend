@@ -169,6 +169,7 @@ const emailTemplate = ({
 // ==================== REGISTRATION EMAIL ====================
 
 export const sendStudentRegistrationEmail = async (student) => {
+  
   return await sendMail({
     to: student.email,
     subject: "Welcome to LMS Platform 🎉",

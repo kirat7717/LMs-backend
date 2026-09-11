@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /teachers/register:
+ * /api/teachers/register:
  *   post:
  *     summary: Register / Teacher Application
  *     tags:
@@ -52,7 +52,7 @@
 
 /**
  * @swagger
- * /teachers/login:
+ * /api/teachers/login:
  *   post:
  *     summary: Login
  *     tags:
@@ -93,7 +93,7 @@
 
 /**
  * @swagger
- * /teachers/forgot-password:
+ * /api/teachers/forgot-password:
  *   post:
  *     summary: Forgot Password
  *     tags:
@@ -130,7 +130,7 @@
 
 /**
  * @swagger
- * /teachers/reset-password:
+ * /api/teachers/reset-password:
  *   post:
  *     summary: Reset Password
  *     tags:
@@ -175,7 +175,7 @@
 
 /**
  * @swagger
- * /teachers/profile:
+ * /api/teachers/profile:
  *   get:
  *     summary: Get Profile
  *     tags:
@@ -202,7 +202,7 @@
 
 /**
  * @swagger
- * /teachers/profile:
+ * /api/teachers/profile:
  *   patch:
  *     summary: Update Profile
  *     tags:
@@ -247,7 +247,7 @@
 
 /**
  * @swagger
- * /teachers/logout:
+ * /api/teachers/logout:
  *   post:
  *     summary: Logout
  *     tags:
@@ -274,7 +274,7 @@
 
 /**
  * @swagger
- * /teachers/dashboard:
+ * /api/teachers/dashboard:
  *   get:
  *     summary: Dashboard
  *     tags:
@@ -301,7 +301,7 @@
 
 /**
  * @swagger
- * /teachers:
+ * /api/teachers:
  *   get:
  *     summary: Public Courses
  *     tags:
@@ -326,7 +326,7 @@
 
 /**
  * @swagger
- * /teachers/courses:
+ * /api/teachers/courses:
  *   get:
  *     summary: My Courses
  *     tags:
@@ -353,7 +353,7 @@
 
 /**
  * @swagger
- * /teachers/courses/{courseId}:
+ * /api/teachers/courses/{courseId}:
  *   get:
  *     summary: My Course Detail
  *     tags:
@@ -388,7 +388,7 @@
 
 /**
  * @swagger
- * /teachers:
+ * /api/teachers:
  *   post:
  *     summary: Create Course
  *     tags:
@@ -440,7 +440,7 @@
 
 /**
  * @swagger
- * /teachers/{courseId}:
+ * /api/teachers/{courseId}:
  *   patch:
  *     summary: Update Course
  *     tags:
@@ -485,7 +485,7 @@
 
 /**
  * @swagger
- * /teachers/{courseId}/sections:
+ * /api/teachers/{courseId}/sections:
  *   post:
  *     summary: Add Section
  *     tags:
@@ -530,7 +530,7 @@
 
 /**
  * @swagger
- * /teachers/{courseId}/sections/{sectionId}:
+ * /api/teachers/{courseId}/sections/{sectionId}:
  *   patch:
  *     summary: Update Section
  *     tags:
@@ -582,7 +582,7 @@
 
 /**
  * @swagger
- * /teachers/{courseId}/sections/{sectionId}:
+ * /api/teachers/{courseId}/sections/{sectionId}:
  *   delete:
  *     summary: Delete Section
  *     tags:
@@ -624,7 +624,7 @@
 
 /**
  * @swagger
- * /teachers/{courseId}/sections/{sectionId}/lectures/{lectureId}:
+ * /api/teachers/{courseId}/sections/{sectionId}/lectures/{lectureId}:
  *   delete:
  *     summary: Delete Lecture
  *     tags:

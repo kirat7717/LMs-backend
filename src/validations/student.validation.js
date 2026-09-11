@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+
 export const studentRegisterSchema = Joi.object({
   name: Joi.string().trim().min(2).max(50).required().messages({
     "string.empty": "Name is required",
@@ -14,24 +15,25 @@ export const studentRegisterSchema = Joi.object({
     "any.required": "Email is required",
   }),
 
-confirmPassword: Joi.any()
-  .valid(Joi.ref("password"))
-  .required()
-  .messages({
-    "any.only": "Passwords do not match",
-    "any.required": "Confirm password is required",
-  }),
-
   password: Joi.string().min(8).required().messages({
     "string.empty": "Password is required",
     "string.min": "Password must be at least 8 characters",
     "any.required": "Password is required",
   }),
 
+  confirmPassword: Joi.any()
+    .valid(Joi.ref("password"))
+    .required()
+    .strip() // Validates match, then removes confirmPassword from validated output
+    .messages({
+      "any.only": "Passwords do not match",
+      "any.required": "Confirm password is required",
+    }),
+
   bio: Joi.string().trim().max(500).allow("").optional(),
 
   avatar: Joi.string().trim().allow("").optional(),
-})
+});
 
 export const studentResetPasswordSchema = Joi.object({
   token: Joi.string().required().messages({

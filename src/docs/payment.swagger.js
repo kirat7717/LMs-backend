@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /students/payments/create-checkout-session:
+ * /api/students/payments/create-checkout-session:
  *   post:
  *     summary: Create Checkout Session
  *     tags:
@@ -46,7 +46,7 @@
 
 /**
  * @swagger
- * /students/payments/webhook:
+ * /api/students/payments/webhook:
  *   post:
  *     summary: Stripe Webhook
  *     tags:

@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /admin/set-password:
+ * /api/admin/set-password:
  *   post:
  *     summary: Set Password
  *     tags:
@@ -52,7 +52,7 @@
 
 /**
  * @swagger
- * /admin/login:
+ * /api/admin/login:
  *   post:
  *     summary: Login
  *     tags:
@@ -93,7 +93,7 @@
 
 /**
  * @swagger
- * /admin/profile:
+ * /api/admin/profile:
  *   get:
  *     summary: Get Profile
  *     tags:
@@ -120,7 +120,7 @@
 
 /**
  * @swagger
- * /admin/profile:
+ * /api/admin/profile:
  *   patch:
  *     summary: Update Profile
  *     tags:
@@ -165,7 +165,7 @@
 
 /**
  * @swagger
- * /admin/dashboard:
+ * /api/admin/dashboard:
  *   get:
  *     summary: Dashboard
  *     tags:
@@ -192,7 +192,7 @@
 
 /**
  * @swagger
- * /admin/teacher-requests:
+ * /api/admin/teacher-requests:
  *   get:
  *     summary: Get Teacher Requests
  *     tags:
@@ -219,7 +219,7 @@
 
 /**
  * @swagger
- * /admin/teacher-requests/{teacherRequestId}:
+ * /api/admin/teacher-requests/{teacherRequestId}:
  *   patch:
  *     summary: Update Teacher Request
  *     tags:
@@ -266,7 +266,7 @@
 
 /**
  * @swagger
- * /admin/teachers:
+ * /api/admin/teachers:
  *   get:
  *     summary: Get Teachers
  *     tags:
@@ -293,7 +293,7 @@
 
 /**
  * @swagger
- * /admin/teachers/{teacherId}/status:
+ * /api/admin/teachers/{teacherId}/status:
  *   patch:
  *     summary: Update Teacher Status
  *     tags:
@@ -338,7 +338,7 @@
 
 /**
  * @swagger
- * /admin/students:
+ * /api/admin/students:
  *   get:
  *     summary: Get Students
  *     tags:
@@ -365,7 +365,7 @@
 
 /**
  * @swagger
- * /admin/students/{studentId}/status:
+ * /api/admin/students/{studentId}/status:
  *   patch:
  *     summary: Update Student Status
  *     tags:
@@ -410,7 +410,7 @@
 
 /**
  * @swagger
- * /admin/courses:
+ * /api/admin/courses:
  *   get:
  *     summary: Get Courses
  *     tags:
@@ -437,7 +437,7 @@
 
 /**
  * @swagger
- * /admin/courses/{courseId}:
+ * /api/admin/courses/{courseId}:
  *   patch:
  *     summary: Update Course Approval
  *     tags:
@@ -484,7 +484,7 @@
 
 /**
  * @swagger
- * /admin/categories:
+ * /api/admin/categories:
  *   post:
  *     summary: Create Category
  *     tags:
@@ -526,7 +526,7 @@
 
 /**
  * @swagger
- * /admin/categories:
+ * /api/admin/categories:
  *   get:
  *     summary: Get Categories
  *     tags:
@@ -553,7 +553,7 @@
 
 /**
  * @swagger
- * /admin/categories/{categoryId}:
+ * /api/admin/categories/{categoryId}:
  *   patch:
  *     summary: Update Category
  *     tags:
@@ -606,7 +606,7 @@
 
 /**
  * @swagger
- * /admin/categories/{categoryId}:
+ * /api/admin/categories/{categoryId}:
  *   delete:
  *     summary: Delete Category
  *     tags:

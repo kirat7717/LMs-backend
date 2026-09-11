@@ -30,7 +30,7 @@ const app = express();
 
 // ==================== GLOBAL MIDDLEWARE ====================
 
-app.use(cors());
+app.use(cors({ origin: "*" }));
 
 // ==================== STRIPE WEBHOOK ====================
 

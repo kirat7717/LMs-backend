@@ -30,7 +30,9 @@ import path from "path";
 const registerStudent = async (req, res) => {
   try {
     // Validate registration data
+    
     const { error, value } = studentRegisterSchema.validate(req.body);
+    
 
     if (error) {
       return res.status(400).json({
@@ -72,6 +74,8 @@ const registerStudent = async (req, res) => {
 
     // Send registration and verification emails
     try {
+      console.log("mail");
+      
       await Promise.all([
         sendStudentRegistrationEmail(student),
         sendStudentVerificationEmail(student, verificationToken),

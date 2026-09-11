@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /upload/image:
+ * /api/upload/image:
  *   post:
  *     summary: Upload Image
  *     tags:
@@ -44,7 +44,7 @@
 
 /**
  * @swagger
- * /teachers/{courseId}/sections/{sectionId}/lectures/{lectureId}/video:
+ * /api/teachers/{courseId}/sections/{sectionId}/lectures/{lectureId}/video:
  *   post:
  *     summary: Upload Lecture Video
  *     tags:
