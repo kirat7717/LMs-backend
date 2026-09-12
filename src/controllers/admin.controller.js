@@ -4,11 +4,29 @@ import Student from "../models/student.model.js";
 import Teacher from "../models/teacher.model.js";
 import TeacherRequest from "../models/teacherReqest.model.js";
 import { sendAdminProfileUpdatedEmail } from "../services/emails/adminEmail.service.js";
-import { sendCourseApprovalEmail, sendCourseRejectionEmail } from "../services/emails/courseEmail.service.js";
-import { sendTeacherRejectionEmail } from "../services/emails/teacherEmail.service.js";
-import { hashPassword,comparePassword } from "../utils/password.util.js";
-import { adminLoginSchema, adminUpdateProfileSchema, getStudentsSchema, getTeacherRequestsSchema, getTeachersSchema, setAdminPasswordSchema, updateTeacherRequestSchema, updateUserBlockStatusSchema } from "../validations/admin.validataion.js";
-import { getCoursesSchema, updateCourseApprovalSchema } from "../validations/course.validation.js";
+import {
+  sendCourseApprovalEmail,
+  sendCourseRejectionEmail,
+} from "../services/emails/courseEmail.service.js";
+import {
+  sendTeacherApprovalEmail,
+  sendTeacherRejectionEmail,
+} from "../services/emails/teacherEmail.service.js";
+import { hashPassword, comparePassword } from "../utils/password.util.js";
+import {
+  adminLoginSchema,
+  adminUpdateProfileSchema,
+  getStudentsSchema,
+  getTeacherRequestsSchema,
+  getTeachersSchema,
+  setAdminPasswordSchema,
+  updateTeacherRequestSchema,
+  updateUserBlockStatusSchema,
+} from "../validations/admin.validataion.js";
+import {
+  getCoursesSchema,
+  updateCourseApprovalSchema,
+} from "../validations/course.validation.js";
 import { generateAccessToken } from "../utils/jwt.util.js";
 // ==================== SET ADMIN PASSWORD ====================
 
@@ -107,10 +125,7 @@ const loginAdmin = async (req, res) => {
     }
 
     // Compare password
-    const isPasswordMatch = await comparePassword(
-      password,
-      admin.password
-    );
+    const isPasswordMatch = await comparePassword(password, admin.password);
 
     if (!isPasswordMatch) {
       return res.status(401).json({
@@ -193,15 +208,9 @@ const updateTeacherRequest = async (req, res) => {
 
       // Send rejection email to teacher
       try {
-        await sendTeacherRejectionEmail(
-          teacherRequest,
-          rejectionReason
-        );
+        await sendTeacherRejectionEmail(teacherRequest, rejectionReason);
       } catch (emailError) {
-        console.error(
-          "Teacher rejection email failed:",
-          emailError.message
-        );
+        console.error("Teacher rejection email failed:", emailError.message);
       }
 
       return res.status(200).json({
@@ -232,10 +241,11 @@ const updateTeacherRequest = async (req, res) => {
         teacherRequestId: teacherRequest._id,
         approvedAt: new Date(),
 
+        isActive: true,
+        isBlocked: false,
+
         approvedBy:
-          req.user.role === "admin"
-            ? req.admin._id
-            : req.superAdmin._id,
+          req.user.role === "admin" ? req.admin._id : req.superAdmin._id,
       });
 
       // Update request status
@@ -252,10 +262,7 @@ const updateTeacherRequest = async (req, res) => {
       try {
         await sendTeacherApprovalEmail(teacher);
       } catch (emailError) {
-        console.error(
-          "Teacher approval email failed:",
-          emailError.message
-        );
+        console.error("Teacher approval email failed:", emailError.message);
       }
 
       return res.status(200).json({
@@ -283,9 +290,7 @@ const updateTeacherRequest = async (req, res) => {
 const updateTeacherStatus = async (req, res) => {
   try {
     // Validate block status
-    const { error, value } = updateUserBlockStatusSchema.validate(
-      req.body
-    );
+    const { error, value } = updateUserBlockStatusSchema.validate(req.body);
 
     if (error) {
       return res.status(400).json({
@@ -496,7 +501,9 @@ const getStudents = async (req, res) => {
 
     // Fetch students
     const students = await Student.find(filter)
-      .select("-password -emailVerificationToken -emailVerificationExpires -passwordResetToken -passwordResetExpires")
+      .select(
+        "-password -emailVerificationToken -emailVerificationExpires -passwordResetToken -passwordResetExpires",
+      )
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -577,7 +584,7 @@ const updateCourseApproval = async (req, res) => {
     // Find course with teacher details
     const course = await Course.findById(req.params.id).populate(
       "teacher",
-      "name email"
+      "name email",
     );
 
     if (!course) {
@@ -627,26 +634,16 @@ const updateCourseApproval = async (req, res) => {
       try {
         await sendCourseApprovalEmail(course, course.teacher);
       } catch (emailError) {
-        console.error(
-          "Course approval email failed:",
-          emailError.message
-        );
+        console.error("Course approval email failed:", emailError.message);
       }
     }
 
     // Notify teacher after rejection
     if (status === "rejected") {
       try {
-        await sendCourseRejectionEmail(
-          course,
-          course.teacher,
-          rejectionReason
-        );
+        await sendCourseRejectionEmail(course, course.teacher, rejectionReason);
       } catch (emailError) {
-        console.error(
-          "Course rejection email failed:",
-          emailError.message
-        );
+        console.error("Course rejection email failed:", emailError.message);
       }
     }
 
@@ -707,10 +704,7 @@ const updateAdminProfile = async (req, res) => {
     try {
       await sendAdminProfileUpdatedEmail(admin);
     } catch (emailError) {
-      console.error(
-        "Admin profile update email failed:",
-        emailError.message
-      );
+      console.error("Admin profile update email failed:", emailError.message);
     }
 
     return res.status(200).json({
@@ -769,5 +763,5 @@ export {
   getStudents,
   getCourses,
   updateCourseApproval,
-  getAdminProfile
+  getAdminProfile,
 };

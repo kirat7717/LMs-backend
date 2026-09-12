@@ -55,6 +55,8 @@ const emailTemplate = ({ title, message, buttonText, buttonUrl }) => {
 // ==================== ADMIN INVITATION EMAIL ====================
 
 const sendAdminInvitationEmail = async (admin, setupToken) => {
+  console.log("admin maillgooo");
+  
   // Create password setup URL
   const setupUrl = `${process.env.BASE_URL}/admin/set-password?token=${setupToken}`;
 

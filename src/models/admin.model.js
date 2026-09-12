@@ -32,7 +32,7 @@ const adminSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      default: null,
     },
 
     // ==================== ACCOUNT STATUS ====================

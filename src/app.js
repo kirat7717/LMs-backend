@@ -23,6 +23,7 @@ import superAdminRoutes from "./routes/superAdmin.routes.js";
 import courseRoutes from "./routes/course.routes.js";
 
 import paymentRoutes from "./routes/payment.routes.js";
+import categoryRoutes from "./routes/category.routes.js";
 
 import { handleStripeWebhook } from "./controllers/payment.controller.js";
 
@@ -81,6 +82,7 @@ app.use("/api/super-admin", superAdminRoutes);
 
 // Public courses + course management
 app.use("/api/courses", courseRoutes);
+app.use("/api/categories", categoryRoutes);
 
 app.use("/api/students/payments", paymentRoutes);
 

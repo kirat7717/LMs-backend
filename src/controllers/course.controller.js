@@ -17,6 +17,7 @@ import {
   sendCourseSubmissionEmail,
   sendAdminNewCourseEmail,
   sendCourseUpdateEmail,
+  sendSectionAddedEmail,
 } from "../services/emails/courseEmail.service.js";
 import paginate from "../utils/pagination.util.js";
 
@@ -126,7 +127,6 @@ const createCourse = async (req, res) => {
   }
 };
 
-// Update own course
 const updateCourse = async (req, res) => {
   try {
     // Validate request body
@@ -204,7 +204,16 @@ const updateCourse = async (req, res) => {
       success: true,
       message: "Course updated successfully",
       data: {
-        course: updatedCourse,
+        course: {
+          id: updatedCourse._id,
+          title: updatedCourse.title,
+          description: updatedCourse.description,
+          thumbnail: updatedCourse.thumbnail,
+          category: updatedCourse.category,
+          price: updatedCourse.price,
+          isActive: updatedCourse.isActive,
+          updatedAt: updatedCourse.updatedAt,
+        },
       },
     });
   } catch (error) {
@@ -216,7 +225,6 @@ const updateCourse = async (req, res) => {
     });
   }
 };
-
 export const addSection = async (req, res) => {
   try {
     // Validate request body
@@ -269,12 +277,35 @@ export const addSection = async (req, res) => {
     // Save updated course
     await course.save();
 
+    // Send notification email to teacher
+    try {
+      await sendSectionAddedEmail(
+        course,
+        req.teacher,
+        course.sections[course.sections.length - 1],
+      );
+    } catch (emailError) {
+      console.error("Section added email failed:", emailError.message);
+    }
     return res.status(201).json({
       success: true,
-      message: value.lecture
-        ? "Section and lecture added successfully"
-        : "Section added successfully",
-      data: course,
+      message: "Section and lecture added successfully",
+      data: {
+        courseId: course._id,
+        courseTitle: course.title,
+        section: {
+          id: newSection._id,
+          title: newSection.title,
+          lecture: {
+            id: newSection.lectures[0]._id,
+            title: newSection.lectures[0].title,
+            thumbnail: newSection.lectures[0].thumbnail,
+            videoUrl: newSection.lectures[0].videoUrl,
+            duration: newSection.lectures[0].duration,
+          },
+        },
+        updatedAt: course.updatedAt,
+      },
     });
   } catch (error) {
     console.error("Add Section Error:", error);
@@ -330,7 +361,7 @@ export const updateSection = async (req, res) => {
           arrayFilters: [{ "section._id": req.params.sectionId }],
           new: true,
           runValidators: true,
-        }
+        },
       );
     }
 
@@ -348,7 +379,7 @@ export const updateSection = async (req, res) => {
           arrayFilters: [{ "section._id": req.params.sectionId }],
           new: true,
           runValidators: true,
-        }
+        },
       );
     }
 
@@ -359,27 +390,23 @@ export const updateSection = async (req, res) => {
       const lectureUpdates = {};
 
       if (value.lecture.title !== undefined) {
-        lectureUpdates[
-          "sections.$[section].lectures.$[lecture].title"
-        ] = value.lecture.title;
+        lectureUpdates["sections.$[section].lectures.$[lecture].title"] =
+          value.lecture.title;
       }
 
       if (value.lecture.thumbnail !== undefined) {
-        lectureUpdates[
-          "sections.$[section].lectures.$[lecture].thumbnail"
-        ] = value.lecture.thumbnail;
+        lectureUpdates["sections.$[section].lectures.$[lecture].thumbnail"] =
+          value.lecture.thumbnail;
       }
 
       if (value.lecture.videoUrl !== undefined) {
-        lectureUpdates[
-          "sections.$[section].lectures.$[lecture].videoUrl"
-        ] = value.lecture.videoUrl;
+        lectureUpdates["sections.$[section].lectures.$[lecture].videoUrl"] =
+          value.lecture.videoUrl;
       }
 
       if (value.lecture.duration !== undefined) {
-        lectureUpdates[
-          "sections.$[section].lectures.$[lecture].duration"
-        ] = value.lecture.duration;
+        lectureUpdates["sections.$[section].lectures.$[lecture].duration"] =
+          value.lecture.duration;
       }
 
       // Only run update when at least one lecture field is provided
@@ -396,7 +423,7 @@ export const updateSection = async (req, res) => {
             ],
             new: true,
             runValidators: true,
-          }
+          },
         );
       }
     }
@@ -511,11 +538,36 @@ export const deleteLecture = async (req, res) => {
     // Delete lecture
     lecture.deleteOne();
 
+    // If this was the last lecture, delete the section too
+    if (section.lectures.length === 0) {
+      section.deleteOne();
+
+      await course.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Lecture deleted successfully and empty section was removed",
+        data: {
+          courseId: course._id,
+          sectionId: section._id,
+          lectureId: lecture._id,
+          sectionDeleted: true,
+        },
+      });
+    }
+
+    // Save course when section still has lectures
     await course.save();
 
     return res.status(200).json({
       success: true,
       message: "Lecture deleted successfully",
+      data: {
+        courseId: course._id,
+        sectionId: section._id,
+        lectureId: lecture._id,
+        sectionDeleted: false,
+      },
     });
   } catch (error) {
     console.error("Delete Lecture Error:", error);
@@ -675,8 +727,6 @@ const getCourseDetail = async (req, res) => {
         course,
       },
     });
-
- 
   } catch (error) {
     // Handle course details errors
     console.error("Get course details error:", error.message);
@@ -753,14 +803,10 @@ const getTeacherCourseDetail = async (req, res) => {
   }
 };
 // ==================== UPLOAD LECTURE VIDEO ====================
-const uploadLectureVideo = async (req, res) => {
-  // Keep uploaded file path so it can be deleted if any validation fails
-  const uploadedFilePath = req.file
-    ? path.join(process.cwd(), "public", "videos", req.file.filename)
-    : null;
+// ==================== UPLOAD LECTURE VIDEO ====================
 
+const uploadLectureVideo = async (req, res) => {
   try {
-    // Check whether a video was uploaded
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -768,91 +814,17 @@ const uploadLectureVideo = async (req, res) => {
       });
     }
 
-    // Find course
-    const course = await Course.findById(req.params.courseId);
-
-    if (!course) {
-      // Delete uploaded video because course does not exist
-      if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
-        fs.unlinkSync(uploadedFilePath);
-      }
-
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
-      });
-    }
-
-    // Teacher can update only their own course
-    if (course.teacher.toString() !== req.teacher._id.toString()) {
-      // Delete uploaded video because teacher is not the owner
-      if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
-        fs.unlinkSync(uploadedFilePath);
-      }
-
-      return res.status(403).json({
-        success: false,
-        message: "You can only update your own course",
-      });
-    }
-
-    // Find section
-    const section = course.sections.id(req.params.sectionId);
-
-    if (!section) {
-      // Delete uploaded video because section does not exist
-      if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
-        fs.unlinkSync(uploadedFilePath);
-      }
-
-      return res.status(404).json({
-        success: false,
-        message: "Section not found",
-      });
-    }
-
-    // Find lecture
-    const lecture = section.lectures.id(req.params.lectureId);
-
-    if (!lecture) {
-      // Delete uploaded video because lecture does not exist
-      if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
-        fs.unlinkSync(uploadedFilePath);
-      }
-
-      return res.status(404).json({
-        success: false,
-        message: "Lecture not found",
-      });
-    }
-
-    // Generate video URL
     const videoUrl = `${process.env.BASE_URL}/videos/${req.file.filename}`;
-
-    // Save video URL
-    lecture.videoUrl = videoUrl;
-
-    // Save course
-    // Approval status is NOT changed
-    await course.save();
 
     return res.status(200).json({
       success: true,
-      message: "Lecture video uploaded successfully",
+      message: "Video uploaded successfully",
       data: {
         videoUrl,
-        courseId: course._id,
-        sectionId: section._id,
-        lectureId: lecture._id,
       },
     });
   } catch (error) {
-    console.error("Upload lecture video error:", error.message);
-
-    // Delete uploaded video if any error occurs after upload
-    if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
-      fs.unlinkSync(uploadedFilePath);
-    }
+    console.error("Upload video error:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -860,6 +832,8 @@ const uploadLectureVideo = async (req, res) => {
     });
   }
 };
+
+
 
 export {
   createCourse,

@@ -119,3 +119,26 @@ export const sendCourseUpdateEmail = async (course, teacher) => {
     }),
   });
 };
+export const sendSectionAddedEmail = async (course, teacher, section) => {
+  return await sendMail({
+    to: teacher.email,
+    subject: "New Section Added to Your Course",
+    html: emailTemplate({
+      title: "New Section Added Successfully",
+      message: `
+        Hi ${teacher.name},<br /><br />
+
+        A new section <strong>${section.title}</strong> has been added
+        successfully to your course <strong>${course.title}</strong>.<br /><br />
+
+        ${
+          section.lectures?.length
+            ? `Lecture added: <strong>${section.lectures[0].title}</strong>.<br /><br />`
+            : ""
+        }
+
+        Your course has been updated successfully.
+      `,
+    }),
+  });
+};

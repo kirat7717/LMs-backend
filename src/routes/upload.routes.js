@@ -7,4 +7,5 @@ const router = express.Router();
 // Upload single image
 router.post("/image", upload.single("image"), uploadImage);
 
+
 export default router;

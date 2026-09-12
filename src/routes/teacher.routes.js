@@ -14,6 +14,7 @@ import {
   getTeacherCourses,
   getTeacherCourseDetail,
   uploadLectureVideo,
+ 
 } from "../controllers/course.controller.js";
 
 // ==================== TEACHER AUTH CONTROLLER ====================
@@ -196,14 +197,10 @@ router.delete(
 // LECTURE VIDEO
 // ============================================================
 
-// Upload lecture video
 router.post(
-  "/:courseId/sections/:sectionId/lectures/:lectureId/video",
+  "/upload-video",
   authMiddleware,
   teacherMiddleware,
-  validateObjectId("courseId"),
-  validateObjectId("sectionId"),
-  validateObjectId("lectureId"),
   uploadVideo.single("video"),
   uploadLectureVideo
 );

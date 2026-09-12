@@ -52,7 +52,7 @@ router.post("/reset-password", resetStudentPassword);
 
 // ==================== UPDATE STUDENT PROFILE ====================
 
-router.put(
+router.patch(
   "/profile",
   authMiddleware,
   studentMiddleware,
