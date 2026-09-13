@@ -11,6 +11,8 @@ import {
   updateCourseSchema,
   createSectionSchema,
   updateSectionSchema,
+  addLectureSchema,
+  updateLectureSchema,
 } from "../validations/course.validation.js";
 
 import {
@@ -317,10 +319,12 @@ export const addSection = async (req, res) => {
   }
 };
 
-export const updateSection = async (req, res) => {
+// ==================== ADD LECTURE ====================
+
+export const addLecture = async (req, res) => {
   try {
     // Validate request body
-    const { error, value } = updateSectionSchema.validate(req.body);
+    const { error, value } = addLectureSchema.validate(req.body);
 
     if (error) {
       return res.status(400).json({
@@ -329,8 +333,10 @@ export const updateSection = async (req, res) => {
       });
     }
 
+    const { courseId, sectionId } = req.params;
+
     // Find course
-    const course = await Course.findById(req.params.courseId);
+    const course = await Course.findById(courseId);
 
     if (!course) {
       return res.status(404).json({
@@ -347,95 +353,119 @@ export const updateSection = async (req, res) => {
       });
     }
 
-    // ==================== UPDATE SECTION TITLE ====================
+    // Find section
+    const section = course.sections.id(sectionId);
 
-    if (value.title !== undefined) {
-      await Course.findByIdAndUpdate(
-        req.params.courseId,
-        {
-          $set: {
-            "sections.$[section].title": value.title,
-          },
-        },
-        {
-          arrayFilters: [{ "section._id": req.params.sectionId }],
-          new: true,
-          runValidators: true,
-        },
-      );
+    if (!section) {
+      return res.status(404).json({
+        success: false,
+        message: "Section not found",
+      });
     }
 
-    // ==================== ADD LECTURE ====================
+    // Add lecture
+    section.lectures.push({
+      title: value.title,
+      thumbnail: value.thumbnail || "",
+      videoUrl: value.videoUrl,
+      duration: value.duration,
+    });
 
-    if (value.lecture && !value.lectureId) {
-      await Course.findByIdAndUpdate(
-        req.params.courseId,
-        {
-          $push: {
-            "sections.$[section].lectures": value.lecture,
+    await course.save();
+
+    // Get newly added lecture
+    const addedLecture = section.lectures[section.lectures.length - 1];
+
+    return res.status(201).json({
+      success: true,
+      message: "Lecture added successfully",
+      data: {
+        courseId: course._id,
+        courseTitle: course.title,
+        section: {
+          id: section._id,
+          title: section.title,
+          lecture: {
+            id: addedLecture._id,
+            title: addedLecture.title,
+            thumbnail: addedLecture.thumbnail,
+            videoUrl: addedLecture.videoUrl,
+            duration: addedLecture.duration,
           },
         },
-        {
-          arrayFilters: [{ "section._id": req.params.sectionId }],
-          new: true,
-          runValidators: true,
-        },
-      );
+        updatedAt: course.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error("Add Lecture Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to add lecture",
+    });
+  }
+};
+// ==================== UPDATE SECTION ====================
+
+export const updateSection = async (req, res) => {
+  try {
+    // Validate request body
+    const { error, value } = updateSectionSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
     }
 
-    // ==================== UPDATE LECTURE ====================
+    const { courseId, sectionId } = req.params;
 
-    if (value.lectureId && value.lecture) {
-      // Build $set dynamically so only provided fields are updated
-      const lectureUpdates = {};
+    // Find course
+    const course = await Course.findById(courseId);
 
-      if (value.lecture.title !== undefined) {
-        lectureUpdates["sections.$[section].lectures.$[lecture].title"] =
-          value.lecture.title;
-      }
-
-      if (value.lecture.thumbnail !== undefined) {
-        lectureUpdates["sections.$[section].lectures.$[lecture].thumbnail"] =
-          value.lecture.thumbnail;
-      }
-
-      if (value.lecture.videoUrl !== undefined) {
-        lectureUpdates["sections.$[section].lectures.$[lecture].videoUrl"] =
-          value.lecture.videoUrl;
-      }
-
-      if (value.lecture.duration !== undefined) {
-        lectureUpdates["sections.$[section].lectures.$[lecture].duration"] =
-          value.lecture.duration;
-      }
-
-      // Only run update when at least one lecture field is provided
-      if (Object.keys(lectureUpdates).length > 0) {
-        await Course.findByIdAndUpdate(
-          req.params.courseId,
-          {
-            $set: lectureUpdates,
-          },
-          {
-            arrayFilters: [
-              { "section._id": req.params.sectionId },
-              { "lecture._id": value.lectureId },
-            ],
-            new: true,
-            runValidators: true,
-          },
-        );
-      }
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
     }
 
-    // ==================== GET UPDATED COURSE ====================
+    // Check teacher ownership
+    if (course.teacher.toString() !== req.teacher._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to modify this course",
+      });
+    }
 
-    const updatedCourse = await Course.findById(req.params.courseId);
+    // Find section
+    const section = course.sections.id(sectionId);
+
+    if (!section) {
+      return res.status(404).json({
+        success: false,
+        message: "Section not found",
+      });
+    }
+
+    // Update section title
+    section.title = value.title;
+
+    await course.save();
 
     return res.status(200).json({
       success: true,
       message: "Section updated successfully",
-      data: updatedCourse,
+      data: {
+        courseId: course._id,
+        courseTitle: course.title,
+        section: {
+          id: section._id,
+          title: section.title,
+        },
+        updatedAt: course.updatedAt,
+      },
     });
   } catch (error) {
     console.error("Update Section Error:", error);
@@ -492,6 +522,94 @@ export const deleteSection = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete section",
+    });
+  }
+};
+// ==================== UPDATE LECTURE ====================
+
+const updateLecture = async (req, res) => {
+  try {
+    const { error, value } = updateLectureSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    const { courseId, sectionId, lectureId } = req.params;
+
+    // Find course
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Check course ownership
+    if (course.teacher.toString() !== req.teacher._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to modify this course",
+      });
+    }
+
+    // Find section
+    const section = course.sections.id(sectionId);
+
+    if (!section) {
+      return res.status(404).json({
+        success: false,
+        message: "Section not found",
+      });
+    }
+
+    // Find lecture
+    const lecture = section.lectures.id(lectureId);
+
+    if (!lecture) {
+      return res.status(404).json({
+        success: false,
+        message: "Lecture not found",
+      });
+    }
+
+    // Update lecture
+    lecture.title = value.title;
+    lecture.thumbnail = value.thumbnail || "";
+    lecture.videoUrl = value.videoUrl;
+    lecture.duration = value.duration;
+
+    await course.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Lecture updated successfully",
+      data: {
+        courseId: course._id,
+        courseTitle: course.title,
+        sectionId: section._id,
+        sectionTitle: section.title,
+        lecture: {
+          id: lecture._id,
+          title: lecture.title,
+          thumbnail: lecture.thumbnail,
+          videoUrl: lecture.videoUrl,
+          duration: lecture.duration,
+        },
+        updatedAt: course.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error("Update lecture error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update lecture",
     });
   }
 };
@@ -843,4 +961,5 @@ export {
   getTeacherCourses,
   getTeacherCourseDetail,
   uploadLectureVideo,
+  updateLecture
 };

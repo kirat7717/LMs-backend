@@ -194,25 +194,99 @@ const createSectionSchema = Joi.object({
 // ==================== UPDATE SECTION / LECTURE ====================
 
 const updateSectionSchema = Joi.object({
-  // Update section title
-  title: Joi.string().trim().min(2).max(200).optional(),
+  title: Joi.string()
+    .trim()
+    .min(2)
+    .max(200)
+    .required()
+    .messages({
+      "string.empty": "Section title is required",
+      "string.min": "Section title must be at least 2 characters",
+      "string.max": "Section title cannot exceed 200 characters",
+      "any.required": "Section title is required",
+    }),
+});
 
-  // Existing lecture ID
-  lectureId: Joi.string().hex().length(24).optional(),
 
-  // Lecture data
-  lecture: Joi.object({
-    title: Joi.string().trim().min(2).max(200).optional(),
+// Update lecture validation
+const updateLectureSchema = Joi.object({
+  title: Joi.string()
+    .trim()
+    .min(2)
+    .max(200)
+    .required()
+    .messages({
+      "string.empty": "Lecture title is required",
+      "string.min": "Lecture title must be at least 2 characters",
+      "string.max": "Lecture title cannot exceed 200 characters",
+      "any.required": "Lecture title is required",
+    }),
 
-    thumbnail: Joi.string().trim().allow("").optional(),
+     // Thumbnail is optional
+    thumbnail: Joi.string()
+      .trim()
+      .allow("")
+      .optional(),
 
-    // Video URL can be updated separately through upload API
-    videoUrl: Joi.string().trim().uri().allow("").optional(),
 
-    duration: Joi.number().min(0).optional(),
-  }).optional(),
-}).min(1);
+  videoUrl: Joi.string()
+    .trim()
+    .uri()
+    .required()
+    .messages({
+      "string.empty": "Lecture video URL is required",
+      "string.uri": "Invalid lecture video URL",
+      "any.required": "Lecture video URL is required",
+    }),
 
+  duration: Joi.number()
+    .min(0)
+    .required()
+    .messages({
+      "number.base": "Lecture duration must be a number",
+      "number.min": "Lecture duration cannot be negative",
+      "any.required": "Lecture duration is required",
+    }),
+});
+
+// Add lecture validation
+const addLectureSchema = Joi.object({
+  title: Joi.string()
+    .trim()
+    .min(2)
+    .max(200)
+    .required()
+    .messages({
+      "string.empty": "Lecture title is required",
+      "string.min": "Lecture title must be at least 2 characters",
+      "string.max": "Lecture title cannot exceed 200 characters",
+      "any.required": "Lecture title is required",
+    }),
+
+  thumbnail: Joi.string()
+    .trim()
+    .allow("")
+    .optional(),
+
+  videoUrl: Joi.string()
+    .trim()
+    .uri()
+    .required()
+    .messages({
+      "string.empty": "Lecture video URL is required",
+      "string.uri": "Invalid lecture video URL",
+      "any.required": "Lecture video URL is required",
+    }),
+
+  duration: Joi.number()
+    .min(0)
+    .required()
+    .messages({
+      "number.base": "Lecture duration must be a number",
+      "number.min": "Lecture duration cannot be negative",
+      "any.required": "Lecture duration is required",
+    }),
+});
 // ==================== UPDATE COURSE PROGRESS ====================
 
 const updateCourseProgressSchema = Joi.object({
@@ -257,4 +331,6 @@ export {
   updateSectionSchema,
   createSectionSchema,
   updateCourseProgressSchema,
+  updateLectureSchema,
+  addLectureSchema
 };

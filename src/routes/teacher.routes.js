@@ -3,18 +3,17 @@ import express from "express";
 // ==================== COURSE CONTROLLERS ====================
 
 import {
-  getCourses,
-  getCourseDetail,
   createCourse,
   updateCourse,
   addSection,
   updateSection,
   deleteSection,
+  addLecture,
+  updateLecture,
   deleteLecture,
   getTeacherCourses,
   getTeacherCourseDetail,
   uploadLectureVideo,
- 
 } from "../controllers/course.controller.js";
 
 // ==================== TEACHER AUTH CONTROLLER ====================
@@ -38,7 +37,9 @@ import validateObjectId from "../middlewares/validateObjectId.middleware.js";
 
 // ==================== DASHBOARD ====================
 
-import { getTeacherDashboard } from "../controllers/teacher.dashboard.controller.js";
+import {
+  getTeacherDashboard,
+} from "../controllers/teacher.dashboard.controller.js";
 
 const router = express.Router();
 
@@ -46,17 +47,29 @@ const router = express.Router();
 // TEACHER AUTH ROUTES
 // ============================================================
 
-// Teacher registration
-router.post("/register", registerTeacher);
+// Register teacher
+router.post(
+  "/register",
+  registerTeacher
+);
 
-// Teacher login
-router.post("/login", loginTeacher);
+// Login teacher
+router.post(
+  "/login",
+  loginTeacher
+);
 
-// Forgot teacher password
-router.post("/forgot-password", forgotTeacherPassword);
+// Forgot password
+router.post(
+  "/forgot-password",
+  forgotTeacherPassword
+);
 
-// Reset teacher password
-router.post("/reset-password", resetTeacherPassword);
+// Reset password
+router.post(
+  "/reset-password",
+  resetTeacherPassword
+);
 
 // ============================================================
 // TEACHER PROFILE ROUTES
@@ -78,7 +91,7 @@ router.patch(
   updateTeacherProfile
 );
 
-// Teacher logout
+// Logout teacher
 router.post(
   "/logout",
   authMiddleware,
@@ -90,8 +103,7 @@ router.post(
 // TEACHER DASHBOARD
 // ============================================================
 
-// Get dashboard data of the logged-in teacher
-// Keep this BEFORE /:id
+// Keep before /:id
 router.get(
   "/dashboard",
   authMiddleware,
@@ -100,18 +112,10 @@ router.get(
 );
 
 // ============================================================
-// PUBLIC COURSE ROUTES
-// ============================================================
-
-// Get all approved courses
-router.get("/", getCourses);
-
-// ============================================================
 // TEACHER COURSE VIEW ROUTES
 // ============================================================
 
 // Get all courses created by logged-in teacher
-// Keep this BEFORE /:id
 router.get(
   "/courses",
   authMiddleware,
@@ -140,7 +144,7 @@ router.post(
   createCourse
 );
 
-// Update course basic information
+// Update own course
 router.patch(
   "/:id",
   authMiddleware,
@@ -150,10 +154,10 @@ router.patch(
 );
 
 // ============================================================
-// SECTION & LECTURE ROUTES
+// SECTION MANAGEMENT
 // ============================================================
 
-// Add section + optional lecture
+// Add new section + first lecture
 router.post(
   "/:courseId/sections",
   authMiddleware,
@@ -162,7 +166,7 @@ router.post(
   addSection
 );
 
-// Update section / add lecture / update lecture
+// Update section ONLY
 router.patch(
   "/:courseId/sections/:sectionId",
   authMiddleware,
@@ -182,6 +186,31 @@ router.delete(
   deleteSection
 );
 
+// ============================================================
+// LECTURE MANAGEMENT
+// ============================================================
+
+// Add lecture to existing section
+router.post(
+  "/:courseId/sections/:sectionId/lectures",
+  authMiddleware,
+  teacherMiddleware,
+  validateObjectId("courseId"),
+  validateObjectId("sectionId"),
+  addLecture
+);
+
+// Update specific lecture
+router.patch(
+  "/:courseId/sections/:sectionId/lectures/:lectureId",
+  authMiddleware,
+  teacherMiddleware,
+  validateObjectId("courseId"),
+  validateObjectId("sectionId"),
+  validateObjectId("lectureId"),
+  updateLecture
+);
+
 // Delete specific lecture
 router.delete(
   "/:courseId/sections/:sectionId/lectures/:lectureId",
@@ -194,27 +223,17 @@ router.delete(
 );
 
 // ============================================================
-// LECTURE VIDEO
+// LECTURE VIDEO UPLOAD
 // ============================================================
 
+// Upload video only
+// No courseId / sectionId / lectureId required
 router.post(
   "/upload-video",
   authMiddleware,
   teacherMiddleware,
   uploadVideo.single("video"),
   uploadLectureVideo
-);
-
-// ============================================================
-// PUBLIC COURSE DETAIL
-// ============================================================
-
-// Get single approved course
-// Keep this LAST because /:id can match many paths
-router.get(
-  "/:id",
-  validateObjectId("id"),
-  getCourseDetail
 );
 
 export default router;

@@ -39,7 +39,6 @@ export const getStudentDashboard = async (req, res) => {
         // Only fetch fields required by dashboard
         {
           $project: {
-            course: 1,
             status: 1,
             progress: 1,
             lectureProgress: 1,
