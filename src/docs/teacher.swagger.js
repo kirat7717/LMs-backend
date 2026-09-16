@@ -299,30 +299,6 @@
  *       - bearerAuth:
  */
 
-/**
- * @swagger
- * /api/teachers:
- *   get:
- *     summary: Public Courses
- *     tags:
- *       - Teacher
- *     description: Get approved and active public courses.
- *     responses:
- *       200:
- *         description: Request completed successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Authentication required
- *       403:
- *         description: Access denied
- *       404:
- *         description: Resource not found
- *       409:
- *         description: Conflict
- *       500:
- *         description: Internal server error
- */
 
 /**
  * @swagger
@@ -669,4 +645,172 @@
  *           type: string
  *         description: lectureId MongoDB ObjectId
  *         example: 64f1a2b3c4d5e6f789012345
+ */
+
+
+/**
+ * @swagger
+ * /api/teachers/{courseId}/sections/{sectionId}/lectures:
+ *   post:
+ *     summary: Add Lecture
+ *     tags:
+ *       - Teacher
+ *     description: Add a lecture to a section owned by the authenticated Teacher.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 64f1a2b3c4d5e6f789012345
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 64f1a2b3c4d5e6f789012346
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - videoUrl
+ *               - duration
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: Introduction to Node.js
+ *               thumbnail:
+ *                 type: string
+ *                 example: http://localhost:9000/images/lecture-thumb.jpg
+ *               videoUrl:
+ *                 type: string
+ *                 format: uri
+ *                 example: http://localhost:9000/videos/lecture.mp4
+ *               duration:
+ *                 type: number
+ *                 minimum: 0
+ *                 example: 120
+ *     responses:
+ *       201:
+ *         description: Lecture added successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Teacher access/ownership denied
+ *       404:
+ *         description: Course or section not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/teachers/{courseId}/sections/{sectionId}/lectures/{lectureId}:
+ *   patch:
+ *     summary: Update Lecture
+ *     tags:
+ *       - Teacher
+ *     description: Update a lecture owned by the authenticated Teacher.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 64f1a2b3c4d5e6f789012345
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 64f1a2b3c4d5e6f789012346
+ *       - in: path
+ *         name: lectureId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 64f1a2b3c4d5e6f789012347
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - videoUrl
+ *               - duration
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: Updated Node.js Introduction
+ *               thumbnail:
+ *                 type: string
+ *                 example: http://localhost:9000/images/lecture-thumb.jpg
+ *               videoUrl:
+ *                 type: string
+ *                 format: uri
+ *                 example: http://localhost:9000/videos/new-lecture.mp4
+ *               duration:
+ *                 type: number
+ *                 minimum: 0
+ *                 example: 180
+ *     responses:
+ *       200:
+ *         description: Lecture updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Teacher access/ownership denied
+ *       404:
+ *         description: Course, section, or lecture not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/teachers/upload-video:
+ *   post:
+ *     summary: Upload Lecture Video
+ *     tags:
+ *       - Teacher
+ *     description: Protected Teacher video upload service. It only uploads a video and returns a videoUrl; it does not create or update a lecture.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - video
+ *             properties:
+ *               video:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Video uploaded successfully
+ *       400:
+ *         description: Missing/invalid video or file too large
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Teacher access denied
+ *       500:
+ *         description: Internal server error
  */
